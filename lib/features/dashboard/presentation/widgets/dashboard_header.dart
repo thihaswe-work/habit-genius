@@ -10,6 +10,8 @@ class DashboardHeader extends StatelessWidget {
     required this.greeting,
     required this.dateLabel,
     this.streak = 0,
+    this.onRemindersTap,
+    this.onMenuTap,
   });
 
   final String greeting;
@@ -18,6 +20,9 @@ class DashboardHeader extends StatelessWidget {
   /// Consecutive days with at least one habit completed.
   final int streak;
 
+  final VoidCallback? onRemindersTap;
+  final VoidCallback? onMenuTap;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -25,6 +30,12 @@ class DashboardHeader extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
+        if (onMenuTap != null)
+          IconButton(
+            tooltip: 'Menu',
+            icon: const Icon(Icons.menu_rounded),
+            onPressed: onMenuTap,
+          ),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,7 +67,7 @@ class DashboardHeader extends StatelessWidget {
           _StreakBadge(streak: streak),
           const SizedBox(width: AppSpacing.sm),
         ],
-        _NotificationButton(onPressed: () {}),
+        _NotificationButton(onPressed: onRemindersTap ?? () {}),
       ],
     );
   }

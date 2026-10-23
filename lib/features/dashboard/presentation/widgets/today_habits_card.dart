@@ -20,7 +20,7 @@ class TodayHabitsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final habits = ref.watch(habitsProvider);
+    final habits = ref.watch(todayHabitsProvider);
     final today = DateTime.now();
     final visible = habits.take(maxHabits).toList();
     final done = habits.where((Habit h) => h.isCompletedOn(today)).length;
@@ -167,7 +167,7 @@ class _HabitRow extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
-          if (habit.progressType == HabitProgressType.checkbox)
+          if (habit.kind == HabitProgressKind.checkbox)
             _CheckButton(
               checked: completed,
               onTap: () => notifier.toggle(habit, date),
@@ -175,9 +175,13 @@ class _HabitRow extends ConsumerWidget {
           else
             _CounterControl(
               value: progress,
-              target: habit.target,
-              onDecrement: () => notifier.decrement(habit, date),
-              onIncrement: () => notifier.increment(habit, date),
+              target: habit.effectiveTarget,
+              onDecrement: () => habit.kind == HabitProgressKind.duration
+                  ? notifier.addMinutes(habit, date, -5)
+                  : notifier.decrement(habit, date),
+              onIncrement: () => habit.kind == HabitProgressKind.duration
+                  ? notifier.addMinutes(habit, date, 5)
+                  : notifier.increment(habit, date),
             ),
         ],
       ),
@@ -185,11 +189,17 @@ class _HabitRow extends ConsumerWidget {
   }
 
   String _subtitle() {
-    if (habit.progressType == HabitProgressType.checkbox) {
-      return 'Daily';
+    switch (habit.kind) {
+      case HabitProgressKind.checkbox:
+        return habit.schedule.weekdays.isEmpty
+            ? 'Daily'
+            : habit.schedule.timeOfDay.name;
+      case HabitProgressKind.counter:
+        final unit = habit.unit ?? 'times';
+        return '${habit.progressOn(date)} of ${habit.target} $unit';
+      case HabitProgressKind.duration:
+        return '${habit.progressOn(date)} of ${habit.effectiveTarget} min';
     }
-    final unit = habit.unit ?? 'times';
-    return '${habit.progressOn(date)} of ${habit.target} $unit';
   }
 }
 

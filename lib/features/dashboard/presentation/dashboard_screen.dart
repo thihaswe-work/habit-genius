@@ -3,15 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/widgets/app_drawer.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../data/models/habit.dart';
 import '../../focus/application/focus_providers.dart';
 import '../../habits/application/habit_providers.dart';
+import '../../habits/presentation/widgets/reminders_sheet.dart';
 import '../../mood/application/mood_providers.dart';
 import '../application/dashboard_providers.dart';
 import 'widgets/dashboard_header.dart';
-import 'widgets/diary_snapshot_card.dart';
-import 'widgets/expense_snapshot_card.dart';
 import 'widgets/focus_snapshot_card.dart';
 import 'widgets/mood_snapshot_card.dart';
 import 'widgets/quick_actions_grid.dart';
@@ -60,6 +60,7 @@ class DashboardScreen extends ConsumerWidget {
     ];
 
     return Scaffold(
+      drawer: const AppDrawer(),
       body: SafeArea(
         bottom: false,
         child: CustomScrollView(
@@ -77,6 +78,13 @@ class DashboardScreen extends ConsumerWidget {
                   greeting: greeting,
                   dateLabel: dateLabel,
                   streak: streak,
+                  onMenuTap: () => Scaffold.of(context).openDrawer(),
+                  onRemindersTap: () => showModalBottomSheet<void>(
+                    context: context,
+                    isScrollControlled: true,
+                    showDragHandle: true,
+                    builder: (_) => const RemindersSheet(),
+                  ),
                 ),
               ),
             ),
@@ -129,10 +137,6 @@ class DashboardScreen extends ConsumerWidget {
                   const MoodSnapshotCard(),
                   const SizedBox(height: AppSpacing.md),
                   const FocusSnapshotCard(),
-                  const SizedBox(height: AppSpacing.md),
-                  const ExpenseSnapshotCard(),
-                  const SizedBox(height: AppSpacing.md),
-                  const DiarySnapshotCard(),
                   const SizedBox(height: AppSpacing.xxl),
                 ],
               ),

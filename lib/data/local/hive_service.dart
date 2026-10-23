@@ -10,6 +10,7 @@ abstract final class HiveBoxes {
   static const String expenses = 'expenses';
   static const String focusSessions = 'focus_sessions';
   static const String diary = 'diary';
+  static const String expenseCategories = 'expense_categories';
 
   static const List<String> all = <String>[
     habits,
@@ -17,6 +18,7 @@ abstract final class HiveBoxes {
     expenses,
     focusSessions,
     diary,
+    expenseCategories,
   ];
 }
 

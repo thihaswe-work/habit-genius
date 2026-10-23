@@ -17,8 +17,13 @@ class _AddHabitSheetState extends ConsumerState<AddHabitSheet> {
   final _nameCtrl = TextEditingController();
   final _targetCtrl = TextEditingController(text: '1');
   final _unitCtrl = TextEditingController();
-  HabitProgressType _type = HabitProgressType.checkbox;
+  final _durationCtrl = TextEditingController(text: '10');
+  HabitProgressKind _kind = HabitProgressKind.checkbox;
   String _emoji = '🎯';
+  final Set<Weekday> _weekdays = <Weekday>{};
+  TimeOfDayFilter _timeOfDay = TimeOfDayFilter.any;
+  TimeOfDay? _reminder;
+  int _intervalDays = 1;
 
   static const _emojis = ['🎯', '💧', '📚', '🏋️', '🧘', '😴', '🍎', '💊', '🧹', '💻'];
 
@@ -27,6 +32,7 @@ class _AddHabitSheetState extends ConsumerState<AddHabitSheet> {
     _nameCtrl.dispose();
     _targetCtrl.dispose();
     _unitCtrl.dispose();
+    _durationCtrl.dispose();
     super.dispose();
   }
 
@@ -100,23 +106,40 @@ class _AddHabitSheetState extends ConsumerState<AddHabitSheet> {
             const SizedBox(height: AppSpacing.lg),
             Text('Type', style: theme.textTheme.titleSmall),
             const SizedBox(height: AppSpacing.sm),
-            SegmentedButton<HabitProgressType>(
+            SegmentedButton<HabitProgressKind>(
               segments: const [
                 ButtonSegment(
-                  value: HabitProgressType.checkbox,
-                  label: Text('Checkbox'),
+                  value: HabitProgressKind.checkbox,
+                  label: Text('Check'),
                   icon: Icon(Icons.check_box_outlined),
                 ),
                 ButtonSegment(
-                  value: HabitProgressType.counter,
-                  label: Text('Counter'),
+                  value: HabitProgressKind.counter,
+                  label: Text('Count'),
                   icon: Icon(Icons.add_circle_outline_rounded),
                 ),
+                ButtonSegment(
+                  value: HabitProgressKind.duration,
+                  label: Text('Timer'),
+                  icon: Icon(Icons.timer_outlined),
+                ),
               ],
-              selected: {_type},
-              onSelectionChanged: (s) => setState(() => _type = s.first),
+              selected: {_kind},
+              onSelectionChanged: (s) => setState(() => _kind = s.first),
+              showSelectedIcon: false,
             ),
-            if (_type == HabitProgressType.counter) ...[
+            if (_kind == HabitProgressKind.duration) ...[
+              const SizedBox(height: AppSpacing.lg),
+              TextField(
+                controller: _durationCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Target duration (minutes)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+            if (_kind == HabitProgressKind.counter) ...[
               const SizedBox(height: AppSpacing.lg),
               Row(
                 children: [
@@ -147,6 +170,65 @@ class _AddHabitSheetState extends ConsumerState<AddHabitSheet> {
               ),
             ],
             const SizedBox(height: AppSpacing.xl),
+            Text('Schedule', style: theme.textTheme.titleSmall),
+            const SizedBox(height: AppSpacing.sm),
+            SegmentedButton<TimeOfDayFilter>(
+              segments: const [
+                ButtonSegment(value: TimeOfDayFilter.any, label: Text('Anytime')),
+                ButtonSegment(
+                    value: TimeOfDayFilter.morning, label: Text('Morning')),
+                ButtonSegment(
+                    value: TimeOfDayFilter.afternoon,
+                    label: Text('Afternoon')),
+                ButtonSegment(
+                    value: TimeOfDayFilter.evening, label: Text('Evening')),
+              ],
+              selected: {_timeOfDay},
+              onSelectionChanged: (s) =>
+                  setState(() => _timeOfDay = s.first),
+              showSelectedIcon: false,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Wrap(
+              spacing: AppSpacing.xs,
+              children: [
+                for (final day in Weekday.values)
+                  FilterChip(
+                    label: Text(day.name.substring(0, 2).toUpperCase()),
+                    selected: _weekdays.contains(day),
+                    onSelected: (selected) => setState(() {
+                      if (selected) {
+                        _weekdays.add(day);
+                      } else {
+                        _weekdays.remove(day);
+                      }
+                    }),
+                  ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            SegmentedButton<int>(
+              segments: const [
+                ButtonSegment(value: 1, label: Text('Daily')),
+                ButtonSegment(value: 2, label: Text('Every 2d')),
+                ButtonSegment(value: 3, label: Text('Every 3d')),
+              ],
+              selected: {_intervalDays},
+              onSelectionChanged: (s) =>
+                  setState(() => _intervalDays = s.first),
+              showSelectedIcon: false,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.alarm_rounded, size: 18),
+              label: Text(
+                _reminder == null
+                    ? 'Add reminder'
+                    : 'Reminder at ${_reminder!.format(context)}',
+              ),
+              onPressed: _pickReminder,
+            ),
+            const SizedBox(height: AppSpacing.xl),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
@@ -160,17 +242,40 @@ class _AddHabitSheetState extends ConsumerState<AddHabitSheet> {
     );
   }
 
+  Future<void> _pickReminder() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _reminder ?? const TimeOfDay(hour: 8, minute: 0),
+    );
+    if (picked != null) setState(() => _reminder = picked);
+  }
+
   void _save() {
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) return;
     final target = int.tryParse(_targetCtrl.text.trim()) ?? 1;
+    final duration = int.tryParse(_durationCtrl.text.trim()) ?? 10;
+    final unit = _unitCtrl.text.trim();
     final habit = Habit(
       id: newId(),
       name: name,
       emoji: _emoji,
-      progressType: _type,
-      target: _type == HabitProgressType.checkbox ? 1 : target.clamp(1, 999),
-      unit: _unitCtrl.text.trim().isEmpty ? null : _unitCtrl.text.trim(),
+      progressType: _kind == HabitProgressKind.checkbox
+          ? HabitProgressType.checkbox
+          : HabitProgressType.counter,
+      progressKind: _kind,
+      target: _kind == HabitProgressKind.counter ? target.clamp(1, 999) : 1,
+      unit: _kind == HabitProgressKind.counter && unit.isNotEmpty ? unit : null,
+      durationMinutesTarget:
+          _kind == HabitProgressKind.duration ? duration.clamp(1, 600) : 0,
+      schedule: HabitSchedule(
+        timeOfDay: _timeOfDay,
+        weekdays: Set<Weekday>.from(_weekdays),
+        reminderMinutes: _reminder == null
+            ? null
+            : _reminder!.hour * 60 + _reminder!.minute,
+        intervalDays: _intervalDays,
+      ),
       createdAt: DateTime.now(),
     );
     ref.read(habitsProvider.notifier).upsert(habit);

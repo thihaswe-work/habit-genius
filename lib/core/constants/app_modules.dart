@@ -67,25 +67,15 @@ abstract final class AppModules {
     caption: 'Money in & out',
     icon: Icons.account_balance_wallet_rounded,
     colors: [AppColors.expenses, AppColors.expensesAlt],
-    route: AppRoutes.expenses,
+    route: '/expenses',
   );
 
-  static const AppModule diary = AppModule(
-    id: 'diary',
-    title: 'Diary',
-    caption: 'Journal your day',
-    icon: Icons.auto_stories_rounded,
-    colors: [AppColors.diary, AppColors.diaryAlt],
-    route: AppRoutes.diary,
-  );
-
-  /// The five core modules.
+    /// The five core modules.
   static const List<AppModule> all = <AppModule>[
     habits,
     mood,
     focus,
     expenses,
-    diary,
   ];
 
   /// Entry that opens the "all tools" hub.

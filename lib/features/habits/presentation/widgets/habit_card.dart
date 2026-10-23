@@ -6,6 +6,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../data/models/habit.dart';
 import '../../application/habit_providers.dart';
+import 'habit_timer_sheet.dart';
 
 class HabitCard extends ConsumerWidget {
   const HabitCard({
@@ -56,9 +57,14 @@ class HabitCard extends ConsumerWidget {
                     Text(habit.name, style: theme.textTheme.titleMedium),
                     const SizedBox(height: 2),
                     Text(
-                      habit.progressType == HabitProgressType.checkbox
-                          ? (completed ? 'Completed' : 'Tap to complete')
-                          : '$progress / ${habit.target} ${habit.unit ?? 'times'}',
+                      switch (habit.kind) {
+                        HabitProgressKind.checkbox =>
+                          completed ? 'Completed' : 'Tap to complete',
+                        HabitProgressKind.counter =>
+                          '$progress / ${habit.target} ${habit.unit ?? 'times'}',
+                        HabitProgressKind.duration =>
+                          '$progress / ${habit.effectiveTarget} min',
+                      },
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -75,7 +81,51 @@ class HabitCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
-          if (habit.progressType == HabitProgressType.checkbox)
+          if (habit.kind == HabitProgressKind.duration)
+            Row(
+              children: [
+                _IconBtn(
+                  icon: Icons.remove_rounded,
+                  onTap: progress > 0
+                      ? () => notifier.addMinutes(habit, date, -1)
+                      : null,
+                ),
+                Expanded(
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    child: ClipRRect(
+                      borderRadius:
+                          BorderRadius.circular(AppSpacing.radiusPill),
+                      child: LinearProgressIndicator(
+                        value: habit.ratioOn(date),
+                        minHeight: 10,
+                        backgroundColor: theme.colorScheme.surfaceContainer,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          completed ? AppColors.success : AppColors.habits,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                _IconBtn(
+                  icon: Icons.add_rounded,
+                  onTap: () => notifier.addMinutes(habit, date, 1),
+                  filled: !completed,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                _IconBtn(
+                  icon: Icons.timer_outlined,
+                  onTap: () => showModalBottomSheet<void>(
+                    context: context,
+                    isScrollControlled: true,
+                    showDragHandle: true,
+                    builder: (_) => HabitTimerSheet(habit: habit, date: date),
+                  ),
+                ),
+              ],
+            )
+          else if (habit.kind == HabitProgressKind.checkbox)
             GestureDetector(
               onTap: () => notifier.toggle(habit, date),
               child: AnimatedContainer(

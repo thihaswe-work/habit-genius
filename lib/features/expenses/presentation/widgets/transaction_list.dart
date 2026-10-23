@@ -57,7 +57,7 @@ class TransactionList extends ConsumerWidget {
                           .withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     ),
-                    child: Text(entry.category.emoji,
+                    child: Text(entry.categoryEmoji,
                         style: const TextStyle(fontSize: 18)),
                   ),
                   const SizedBox(width: AppSpacing.md),
@@ -66,7 +66,7 @@ class TransactionList extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          entry.note ?? entry.category.label,
+                          entry.note ?? entry.categoryLabel,
                           style: theme.textTheme.titleSmall,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

@@ -4,10 +4,12 @@ import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/widgets/app_drawer.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../data/models/expense_entry.dart';
 import '../application/expense_providers.dart';
 import 'widgets/add_transaction_sheet.dart';
+import 'widgets/category_manager_sheet.dart';
 import 'widgets/transaction_list.dart';
 
 class ExpensesScreen extends ConsumerWidget {
@@ -31,6 +33,23 @@ class ExpensesScreen extends ConsumerWidget {
     final balance = income - expense;
 
     return Scaffold(
+      drawer: const AppDrawer(),
+      appBar: AppBar(
+        title: const Text('Expenses'),
+        leading: const AppMenuButton(),
+        actions: [
+          IconButton(
+            tooltip: 'Manage categories',
+            icon: const Icon(Icons.category_outlined),
+            onPressed: () => showModalBottomSheet<void>(
+              context: context,
+              isScrollControlled: true,
+              useSafeArea: true,
+              builder: (_) => const CategoryManagerSheet(),
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
         bottom: false,
         child: CustomScrollView(
@@ -91,7 +110,8 @@ class ExpensesScreen extends ConsumerWidget {
                                 child: _Mini(
                                   label: 'Income',
                                   value: currency.format(income),
-                                  icon: Icons.arrow_downward_rounded,
+                                  icon: Icons.arrow_upward_rounded,
+                                  iconColor: AppColors.success,
                                 ),
                               ),
                               const SizedBox(width: AppSpacing.md),
@@ -99,7 +119,8 @@ class ExpensesScreen extends ConsumerWidget {
                                 child: _Mini(
                                   label: 'Expense',
                                   value: currency.format(expense),
-                                  icon: Icons.arrow_upward_rounded,
+                                  icon: Icons.arrow_downward_rounded,
+                                  iconColor: AppColors.danger,
                                 ),
                               ),
                             ],
@@ -155,11 +176,13 @@ class _Mini extends StatelessWidget {
     required this.label,
     required this.value,
     required this.icon,
+    this.iconColor = Colors.white,
   });
 
   final String label;
   final String value;
   final IconData icon;
+  final Color iconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -171,7 +194,7 @@ class _Mini extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, color: Colors.white, size: 18),
+          Icon(icon, color: iconColor, size: 18),
           const SizedBox(width: AppSpacing.sm),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,

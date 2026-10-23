@@ -11,15 +11,11 @@ abstract final class AppRoutes {
   static const String more = '/more';
 
   // Sub-pages hosted by the "More" branch.
-  static const String expenses = '/more/expenses';
-  static const String diary = '/more/diary';
 
   /// The five product modules, in the order they appear on the dashboard.
   static const List<String> modules = <String>[
     habits,
     mood,
     focus,
-    expenses,
-    diary,
   ];
 }

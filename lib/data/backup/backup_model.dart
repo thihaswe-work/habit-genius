@@ -9,6 +9,7 @@ class AppBackup {
     required this.expenses,
     required this.focusSessions,
     required this.diary,
+    this.customCategories = const [],
   });
 
   final int version;
@@ -18,6 +19,7 @@ class AppBackup {
   final List<Map<String, dynamic>> expenses;
   final List<Map<String, dynamic>> focusSessions;
   final List<Map<String, dynamic>> diary;
+  final List<Map<String, dynamic>> customCategories;
 
   Map<String, dynamic> toJson() => {
         'version': version,
@@ -27,6 +29,7 @@ class AppBackup {
         'expenses': expenses,
         'focusSessions': focusSessions,
         'diary': diary,
+        'customCategories': customCategories,
       };
 
   String toJsonString() => const JsonEncoder.withIndent('  ').convert(toJson());
@@ -41,6 +44,9 @@ class AppBackup {
       focusSessions:
           (json['focusSessions'] as List?)?.cast<Map<String, dynamic>>() ?? [],
       diary: (json['diary'] as List?)?.cast<Map<String, dynamic>>() ?? [],
+      customCategories:
+          (json['customCategories'] as List?)?.cast<Map<String, dynamic>>() ??
+              [],
     );
   }
 }

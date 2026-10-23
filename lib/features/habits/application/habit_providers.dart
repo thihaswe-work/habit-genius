@@ -8,9 +8,18 @@ import '../../../data/repositories/repository_providers.dart';
 final habitsProvider =
     NotifierProvider<HabitsNotifier, List<Habit>>(HabitsNotifier.new);
 
-/// How many of today's habits are already complete.
-final habitCompletionProvider = Provider<({int done, int total})>((Ref ref) {
+/// Habits scheduled for today, honouring weekday/interval schedules.
+final todayHabitsProvider = Provider<List<Habit>>((Ref ref) {
   final habits = ref.watch(habitsProvider);
+  final today = DateTime.now();
+  return habits
+      .where((Habit h) => !h.isArchived && h.schedule.shouldDoOn(today))
+      .toList();
+});
+
+/// How many of today's scheduled habits are already complete.
+final habitCompletionProvider = Provider<({int done, int total})>((Ref ref) {
+  final habits = ref.watch(todayHabitsProvider);
   final today = DateTime.now();
   final done = habits.where((Habit h) => h.isCompletedOn(today)).length;
   return (done: done, total: habits.length);
@@ -40,6 +49,24 @@ class HabitsNotifier extends Notifier<List<Habit>> {
   Future<void> decrement(Habit habit, DateTime date) async {
     final current = habit.progressOn(date);
     await _repository.setProgress(habit, date, current - 1);
+    state = _repository.getActive();
+  }
+
+  /// Adds [minutes] of tracked time to a duration habit.
+  Future<void> addMinutes(Habit habit, DateTime date, int minutes) async {
+    final current = habit.progressOn(date);
+    final next = (current + minutes).clamp(0, habit.effectiveTarget);
+    await _repository.setProgress(habit, date, next);
+    state = _repository.getActive();
+  }
+
+  /// Sets the tracked time of a duration habit (used by the timer sheet).
+  Future<void> setProgress(
+    Habit habit,
+    DateTime date,
+    int value,
+  ) async {
+    await _repository.setProgress(habit, date, value);
     state = _repository.getActive();
   }
 

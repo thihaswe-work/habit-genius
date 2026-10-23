@@ -11,17 +11,10 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: HabitGeniusApp()));
     await tester.pumpAndSettle();
 
-    // Greeting from the dashboard header.
     expect(find.textContaining('Good '), findsOneWidget);
-
-    // The five modules plus the "all tools" entry point.
     expect(find.text('Habits'), findsWidgets);
     expect(find.text('Mood'), findsWidgets);
     expect(find.text('Focus'), findsWidgets);
-    expect(find.text('Expenses'), findsWidgets);
-    expect(find.text('Diary'), findsWidgets);
-
-    // The bottom navigation bar.
     expect(find.byType(NavigationBar), findsOneWidget);
   });
 }

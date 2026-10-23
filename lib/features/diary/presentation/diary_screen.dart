@@ -18,6 +18,13 @@ class DiaryScreen extends ConsumerWidget {
     final entries = ref.watch(diaryEntriesProvider);
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Diary'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+      ),
       body: SafeArea(
         bottom: false,
         child: CustomScrollView(

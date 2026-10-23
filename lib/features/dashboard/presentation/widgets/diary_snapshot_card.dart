@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_card.dart';
@@ -64,7 +63,7 @@ class DiarySnapshotCard extends ConsumerWidget {
                 ),
               ),
               FilledButton(
-                onPressed: () => context.go(AppRoutes.diary),
+                onPressed: () => context.go('/diary'),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.diary,
                   minimumSize: const Size(0, 40),

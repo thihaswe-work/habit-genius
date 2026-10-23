@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_card.dart';
@@ -30,7 +29,7 @@ class ExpenseSnapshotCard extends ConsumerWidget {
                 child: Text('Money today', style: theme.textTheme.titleMedium),
               ),
               TextButton(
-                onPressed: () => context.go(AppRoutes.expenses),
+                onPressed: () => context.go('/expenses'),
                 style: TextButton.styleFrom(
                   visualDensity: VisualDensity.compact,
                   padding: const EdgeInsets.symmetric(
@@ -49,7 +48,7 @@ class ExpenseSnapshotCard extends ConsumerWidget {
                   label: 'Income',
                   value: currency.format(summary.income),
                   color: AppColors.success,
-                  icon: Icons.arrow_downward_rounded,
+                  icon: Icons.arrow_upward_rounded,
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -58,7 +57,7 @@ class ExpenseSnapshotCard extends ConsumerWidget {
                   label: 'Spent',
                   value: currency.format(summary.expense),
                   color: AppColors.danger,
-                  icon: Icons.arrow_upward_rounded,
+                  icon: Icons.arrow_downward_rounded,
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/widgets/app_drawer.dart';
 import '../../../core/widgets/section_header.dart';
 import '../application/habit_providers.dart';
 import 'widgets/add_habit_sheet.dart';
@@ -20,6 +21,17 @@ class HabitsScreen extends ConsumerWidget {
     final total = habits.length;
 
     return Scaffold(
+      drawer: const AppDrawer(),
+      appBar: AppBar(
+        title: const Text('Habits'),
+        leading: Builder(
+          builder: (context) => IconButton(
+            tooltip: 'Menu',
+            icon: const Icon(Icons.menu_rounded),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+      ),
       body: SafeArea(
         bottom: false,
         child: CustomScrollView(
@@ -64,7 +76,7 @@ class HabitsScreen extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Today\'s progress',
+                                  "Today's progress",
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     color: Colors.white,
                                   ),
@@ -111,6 +123,7 @@ class HabitsScreen extends ConsumerWidget {
                               total == 0 ? '✨' : '$done',
                               style: theme.textTheme.headlineSmall?.copyWith(
                                 color: Colors.white,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
@@ -129,62 +142,55 @@ class HabitsScreen extends ConsumerWidget {
                 bottom: AppSpacing.md,
               ),
               sliver: SliverToBoxAdapter(
-                child: SectionHeader(title: 'Your habits'),
+                child: SectionHeader(
+                  title: 'Your habits',
+                  subtitle: 'Track your routine',
+                ),
               ),
             ),
-            if (habits.isEmpty)
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.gutter,
-                ),
-                sliver: SliverToBoxAdapter(
-                  child: Container(
-                    padding: const EdgeInsets.all(AppSpacing.xxl),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                    ),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.check_circle_outline_rounded,
-                          size: 48,
-                          color: theme.colorScheme.primary,
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
+              sliver: habits.isEmpty
+                  ? SliverToBoxAdapter(
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSpacing.xl),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusXl),
                         ),
-                        const SizedBox(height: AppSpacing.lg),
-                        Text(
-                          'No habits yet',
-                          style: theme.textTheme.titleMedium,
+                        child: Column(
+                          children: [
+                            const Text('🎯', style: TextStyle(fontSize: 36)),
+                            const SizedBox(height: AppSpacing.md),
+                            Text('No habits yet',
+                                style: theme.textTheme.titleMedium),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              'Tap the button below to create your first habit',
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          'Tap the + button to create your first habit',
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    )
+                  : SliverList.builder(
+                      itemCount: habits.length,
+                      itemBuilder: (context, index) {
+                        final habit = habits[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: AppSpacing.md,
                           ),
-                        ),
-                      ],
+                          child: HabitCard(habit: habit, date: today),
+                        );
+                      },
                     ),
-                  ),
-                ),
-              )
-            else
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.gutter,
-                ),
-                sliver: SliverList.separated(
-                  itemCount: habits.length,
-                  separatorBuilder: (_, _) =>
-                      const SizedBox(height: AppSpacing.md),
-                  itemBuilder: (context, index) {
-                    final habit = habits[index];
-                    return HabitCard(habit: habit, date: today);
-                  },
-                ),
-              ),
-            const SliverToBoxAdapter(child: SizedBox(height: 120)),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
         ),
       ),
@@ -197,8 +203,9 @@ class HabitsScreen extends ConsumerWidget {
             builder: (_) => const AddHabitSheet(),
           );
         },
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Add habit'),
+        backgroundColor: AppColors.habits,
+        icon: const Icon(Icons.add_rounded, color: Colors.white),
+        label: const Text('Add habit', style: TextStyle(color: Colors.white)),
       ),
     );
   }

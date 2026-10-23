@@ -5,11 +5,14 @@ import '../local/repositories/hive_mood_repository.dart';
 import '../local/repositories/hive_focus_repository.dart';
 import '../local/repositories/hive_expense_repository.dart';
 import '../local/repositories/hive_diary_repository.dart';
+import '../local/repositories/hive_custom_category_repository.dart';
 import '../models/diary_entry.dart';
+import '../models/custom_category.dart';
 import '../models/expense_entry.dart';
 import '../models/focus_session.dart';
 import '../models/mood_entry.dart';
 import 'diary_repository.dart';
+import 'custom_category_repository.dart';
 import 'expense_repository.dart';
 import 'focus_repository.dart';
 import 'habit_repository.dart';
@@ -49,6 +52,19 @@ final expenseRepositoryProvider = Provider<ExpenseRepository>((Ref ref) {
     return HiveExpenseRepository(box);
   } catch (_) {
     return _InMemoryExpenseRepo();
+  }
+});
+
+final customCategoryRepositoryProvider =
+    Provider<CustomCategoryRepository>((Ref ref) {
+  if (!HiveService.isReady) {
+    return _InMemoryCustomCategoryRepo();
+  }
+  try {
+    final box = HiveService.instance.box('expense_categories');
+    return HiveCustomCategoryRepository(box);
+  } catch (_) {
+    return _InMemoryCustomCategoryRepo();
   }
 });
 
@@ -98,6 +114,27 @@ class _InMemoryExpenseRepo implements ExpenseRepository {
   Future<void> update(ExpenseEntry item) async {}
   @override
   Future<void> delete(String id) async {}
+}
+
+class _InMemoryCustomCategoryRepo implements CustomCategoryRepository {
+  final List<CustomCategory> items = [];
+  @override
+  List<CustomCategory> getAll() =>
+      List<CustomCategory>.unmodifiable(items);
+  @override
+  Future<void> save(CustomCategory item) async {
+    final index = items.indexWhere((c) => c.id == item.id);
+    if (index == -1) {
+      items.add(item);
+    } else {
+      items[index] = item;
+    }
+  }
+
+  @override
+  Future<void> delete(String id) async {
+    items.removeWhere((c) => c.id == id);
+  }
 }
 
 class _InMemoryFocusRepo implements FocusRepository {

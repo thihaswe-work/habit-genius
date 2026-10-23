@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/widgets/app_drawer.dart';
 import '../../../core/widgets/section_header.dart';
 import 'widgets/focus_history_list.dart';
 import 'widgets/pomodoro_timer.dart';
@@ -14,6 +15,11 @@ class FocusScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
+      drawer: const AppDrawer(),
+      appBar: AppBar(
+        title: const Text('Focus Timer'),
+        leading: const AppMenuButton(),
+      ),
       body: SafeArea(
         bottom: false,
         child: CustomScrollView(

@@ -3,13 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/dashboard/presentation/dashboard_screen.dart';
-import '../../features/diary/presentation/diary_screen.dart';
-import '../../features/expenses/presentation/expenses_screen.dart';
 import '../../features/focus/presentation/focus_screen.dart';
 import '../../features/habits/presentation/habits_screen.dart';
 import '../../features/mood/presentation/mood_screen.dart';
 import '../../features/more/presentation/more_screen.dart';
-import '../../features/shell/presentation/app_shell.dart';
+import '../../features/settings/presentation/settings_screen.dart';
+import '../../features/analytics/presentation/analytics_screen.dart';
+import '../../features/expenses/presentation/expenses_screen.dart';
+import "../../features/shell/presentation/app_shell.dart";
 import 'app_routes.dart';
 
 /// The application router.
@@ -74,24 +75,29 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
                 name: 'more',
                 builder: (BuildContext context, GoRouterState state) =>
                     const MoreScreen(),
-                routes: <RouteBase>[
-                  GoRoute(
-                    path: 'expenses',
-                    name: 'expenses',
-                    builder: (BuildContext context, GoRouterState state) =>
-                        const ExpensesScreen(),
-                  ),
-                  GoRoute(
-                    path: 'diary',
-                    name: 'diary',
-                    builder: (BuildContext context, GoRouterState state) =>
-                        const DiaryScreen(),
-                  ),
-                ],
+                routes: const <RouteBase>[],
               ),
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: '/settings',
+        name: 'settings',
+        builder: (BuildContext context, GoRouterState state) =>
+            const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/expenses',
+        name: 'expenses',
+        builder: (BuildContext context, GoRouterState state) =>
+            const ExpensesScreen(),
+      ),
+      GoRoute(
+        path: '/analytics',
+        name: 'analytics',
+        builder: (BuildContext context, GoRouterState state) =>
+            const AnalyticsScreen(),
       ),
     ],
   );
