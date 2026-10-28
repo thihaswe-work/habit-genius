@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_spacing.dart';
-import '../../../core/widgets/app_drawer.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_drawer.dart';
 import '../../../data/backup/backup_service.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -23,7 +23,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     return Scaffold(
       drawer: const AppDrawer(),
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(
+        title: const Text('Settings'),
+        leading: Builder(
+          builder: (context) => IconButton(
+            tooltip: 'Menu',
+            icon: const Icon(Icons.menu_rounded),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.gutter),
@@ -31,7 +40,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Text('Backup & Restore', style: theme.textTheme.titleLarge),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              'Export your data to transfer between phones, or import a JSON/CSV backup.',
+              'Export your data to transfer between phones, or import a JSON/CSV/Excel/SQL backup.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -109,6 +118,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             }
                           },
                   ),
+                  const Divider(height: AppSpacing.lg),
+                  _Tile(
+                    icon: Icons.storage_rounded,
+                    label: 'Export as SQL (.sql)',
+                    subtitle: 'Portable SQL script for databases',
+                    onTap: _busy
+                        ? null
+                        : () async {
+                            final messenger = ScaffoldMessenger.of(context);
+                            setState(() => _busy = true);
+                            try {
+                              final name = await service.exportSql();
+                              if (mounted) {
+                                messenger.showSnackBar(
+                                  SnackBar(content: Text('Saved: $name')),
+                                );
+                              }
+                            } finally {
+                              if (mounted) setState(() => _busy = false);
+                            }
+                          },
+                  ),
                 ],
               ),
             ),
@@ -159,6 +190,62 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             setState(() => _busy = true);
                             try {
                               final count = await service.importCsv();
+                              if (mounted) {
+                                messenger.showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      count == 0
+                                          ? 'No data imported'
+                                          : 'Imported $count items from backup',
+                                    ),
+                                  ),
+                                );
+                              }
+                            } finally {
+                              if (mounted) setState(() => _busy = false);
+                            }
+                          },
+                  ),
+                  const Divider(height: AppSpacing.lg),
+                  _Tile(
+                    icon: Icons.grid_on_rounded,
+                    label: 'Import from Excel (.XLSX)',
+                    subtitle: 'Restore multi-sheet workbook',
+                    onTap: _busy
+                        ? null
+                        : () async {
+                            final messenger = ScaffoldMessenger.of(context);
+                            setState(() => _busy = true);
+                            try {
+                              final count = await service.importExcel();
+                              if (mounted) {
+                                messenger.showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      count == 0
+                                          ? 'No data imported'
+                                          : 'Imported $count items from backup',
+                                    ),
+                                  ),
+                                );
+                              }
+                            } finally {
+                              if (mounted) setState(() => _busy = false);
+                            }
+                          },
+                  ),
+                  const Divider(height: AppSpacing.lg),
+                  _Tile(
+                    icon: Icons.storage_rounded,
+                    label: 'Import from SQL (.sql)',
+                    subtitle: 'Run a HabitGenius SQL backup',
+                    onTap: _busy
+                        ? null
+                        : () async {
+                            final messenger = ScaffoldMessenger.of(context);
+                            setState(() => _busy = true);
+                            try {
+                              final count = await service.importSql();
                               if (mounted) {
                                 messenger.showSnackBar(
                                   SnackBar(
