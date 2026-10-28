@@ -84,6 +84,12 @@ class AppDrawer extends StatelessWidget {
               route: '/expenses',
             ),
             _DrawerItem(
+              icon: Icons.book_outlined,
+              selectedIcon: Icons.book_rounded,
+              label: 'Diary',
+              route: '/diary',
+            ),
+            _DrawerItem(
               icon: Icons.insights_outlined,
               selectedIcon: Icons.insights_rounded,
               label: 'Analytics',

@@ -10,6 +10,7 @@ import '../../features/more/presentation/more_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/analytics/presentation/analytics_screen.dart';
 import '../../features/expenses/presentation/expenses_screen.dart';
+import '../../features/diary/presentation/diary_screen.dart';
 import "../../features/shell/presentation/app_shell.dart";
 import 'app_routes.dart';
 
@@ -98,6 +99,12 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
         name: 'analytics',
         builder: (BuildContext context, GoRouterState state) =>
             const AnalyticsScreen(),
+      ),
+      GoRoute(
+        path: '/diary',
+        name: 'diary',
+        builder: (BuildContext context, GoRouterState state) =>
+            const DiaryScreen(),
       ),
     ],
   );
