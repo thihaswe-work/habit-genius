@@ -11,97 +11,66 @@ import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/analytics/presentation/analytics_screen.dart';
 import '../../features/expenses/presentation/expenses_screen.dart';
 import '../../features/diary/presentation/diary_screen.dart';
-import "../../features/shell/presentation/app_shell.dart";
 import 'app_routes.dart';
 
 /// The application router.
 ///
-/// A `StatefulShellRoute` provides the bottom navigation bar: every branch
-/// keeps an independent navigation stack, while module pages such as the
-/// expense tracker live as children of the "More" branch so they still show
-/// the navigation bar.
+/// All mini-apps are flat top-level routes, navigated via the drawer.
+/// In-app navigation within each mini-app uses tabs.
 final appRouterProvider = Provider<GoRouter>((Ref ref) {
   return GoRouter(
     initialLocation: AppRoutes.dashboard,
     routes: <RouteBase>[
-      StatefulShellRoute.indexedStack(
-        builder: (BuildContext context, GoRouterState state,
-                StatefulNavigationShell navigationShell) =>
-            AppShell(navigationShell: navigationShell),
-        branches: <StatefulShellBranch>[
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              GoRoute(
-                path: AppRoutes.dashboard,
-                name: 'dashboard',
-                builder: (BuildContext context, GoRouterState state) =>
-                    const DashboardScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              GoRoute(
-                path: AppRoutes.habits,
-                name: 'habits',
-                builder: (BuildContext context, GoRouterState state) =>
-                    const HabitsScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              GoRoute(
-                path: AppRoutes.mood,
-                name: 'mood',
-                builder: (BuildContext context, GoRouterState state) =>
-                    const MoodScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              GoRoute(
-                path: AppRoutes.focus,
-                name: 'focus',
-                builder: (BuildContext context, GoRouterState state) =>
-                    const FocusScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              GoRoute(
-                path: AppRoutes.more,
-                name: 'more',
-                builder: (BuildContext context, GoRouterState state) =>
-                    const MoreScreen(),
-                routes: const <RouteBase>[],
-              ),
-            ],
-          ),
-        ],
+      GoRoute(
+        path: AppRoutes.dashboard,
+        name: 'dashboard',
+        builder: (BuildContext context, GoRouterState state) =>
+            const DashboardScreen(),
       ),
       GoRoute(
-        path: '/settings',
+        path: AppRoutes.habits,
+        name: 'habits',
+        builder: (BuildContext context, GoRouterState state) =>
+            const HabitsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.mood,
+        name: 'mood',
+        builder: (BuildContext context, GoRouterState state) =>
+            const MoodScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.focus,
+        name: 'focus',
+        builder: (BuildContext context, GoRouterState state) =>
+            const FocusScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.more,
+        name: 'more',
+        builder: (BuildContext context, GoRouterState state) =>
+            const MoreScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.settings,
         name: 'settings',
         builder: (BuildContext context, GoRouterState state) =>
             const SettingsScreen(),
       ),
       GoRoute(
-        path: '/expenses',
+        path: AppRoutes.expenses,
         name: 'expenses',
         builder: (BuildContext context, GoRouterState state) =>
             const ExpensesScreen(),
       ),
       GoRoute(
-        path: '/analytics',
+        path: AppRoutes.analytics,
         name: 'analytics',
         builder: (BuildContext context, GoRouterState state) =>
             const AnalyticsScreen(),
       ),
       GoRoute(
-        path: '/diary',
+        path: AppRoutes.diary,
         name: 'diary',
         builder: (BuildContext context, GoRouterState state) =>
             const DiaryScreen(),

@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../router/app_routes.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 
 /// The main application menu shown in the navigation drawer.
+///
+/// This is the primary navigation mechanism — all mini-apps are reached
+/// through drawer items.
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final currentPath = GoRouterState.of(context).uri.path;
 
     return Drawer(
       child: SafeArea(
@@ -55,45 +60,54 @@ class AppDrawer extends StatelessWidget {
               icon: Icons.home_outlined,
               selectedIcon: Icons.home_rounded,
               label: 'Dashboard',
-              route: '/',
+              route: AppRoutes.dashboard,
+              currentPath: currentPath,
             ),
             _DrawerItem(
               icon: Icons.check_circle_outline_rounded,
               selectedIcon: Icons.check_circle_rounded,
               label: 'Habits',
-              route: '/habits',
+              route: AppRoutes.habits,
+              currentPath: currentPath,
             ),
             _DrawerItem(
               icon: Icons.sentiment_satisfied_outlined,
               selectedIcon: Icons.sentiment_satisfied_rounded,
               label: 'Mood Journal',
-              route: '/mood',
+              route: AppRoutes.mood,
+              currentPath: currentPath,
             ),
             _DrawerItem(
               icon: Icons.timer_outlined,
               selectedIcon: Icons.timer_rounded,
               label: 'Focus Timer',
-              route: '/focus',
+              route: AppRoutes.focus,
+              currentPath: currentPath,
             ),
             const Divider(indent: AppSpacing.lg, endIndent: AppSpacing.lg),
-            _SectionLabel('Money'),
+            _SectionLabel('Money & Notes'),
             _DrawerItem(
               icon: Icons.account_balance_wallet_outlined,
               selectedIcon: Icons.account_balance_wallet_rounded,
               label: 'Expenses & Income',
-              route: '/expenses',
+              route: AppRoutes.expenses,
+              currentPath: currentPath,
             ),
             _DrawerItem(
               icon: Icons.book_outlined,
               selectedIcon: Icons.book_rounded,
               label: 'Diary',
-              route: '/diary',
+              route: AppRoutes.diary,
+              currentPath: currentPath,
             ),
+            const Divider(indent: AppSpacing.lg, endIndent: AppSpacing.lg),
+            _SectionLabel('Insights'),
             _DrawerItem(
               icon: Icons.insights_outlined,
               selectedIcon: Icons.insights_rounded,
-              label: 'Analytics',
-              route: '/analytics',
+              label: 'Analytics & Heatmap',
+              route: AppRoutes.analytics,
+              currentPath: currentPath,
             ),
             const Divider(indent: AppSpacing.lg, endIndent: AppSpacing.lg),
             _SectionLabel('App'),
@@ -101,13 +115,15 @@ class AppDrawer extends StatelessWidget {
               icon: Icons.grid_view_outlined,
               selectedIcon: Icons.grid_view_rounded,
               label: 'All tools',
-              route: '/more',
+              route: AppRoutes.more,
+              currentPath: currentPath,
             ),
             _DrawerItem(
               icon: Icons.settings_outlined,
               selectedIcon: Icons.settings_rounded,
               label: 'Settings & Backup',
-              route: '/settings',
+              route: AppRoutes.settings,
+              currentPath: currentPath,
             ),
             const SizedBox(height: AppSpacing.xl),
           ],
@@ -149,17 +165,19 @@ class _DrawerItem extends StatelessWidget {
     required this.selectedIcon,
     required this.label,
     required this.route,
+    required this.currentPath,
   });
 
   final IconData icon;
   final IconData selectedIcon;
   final String label;
   final String route;
+  final String currentPath;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final selected = GoRouterState.of(context).uri.path == route;
+    final selected = currentPath == route;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),

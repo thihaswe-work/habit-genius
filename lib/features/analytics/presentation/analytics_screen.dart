@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_spacing.dart';
-import '../../../core/widgets/app_drawer.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_drawer.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../data/models/habit.dart';
@@ -19,73 +19,144 @@ class AnalyticsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     final habits = ref.watch(habitsProvider);
     final active = habits.where((h) => !h.isArchived).toList();
     final score = InsightsEngine.averageGeniusScore(active);
     final rate = InsightsEngine.overallCompletionRate(active);
     final insights = InsightsEngine.generate(active);
 
-    return Scaffold(
-      drawer: const AppDrawer(),
-      appBar: AppBar(
-        title: const Text('Analytics'),
-        leading: const AppMenuButton(),
-      ),
-      body: SafeArea(
-        bottom: false,
-        child: ListView(
-          padding: const EdgeInsets.all(AppSpacing.gutter),
-          children: [
-            Text('Trends & Insights', style: theme.textTheme.headlineSmall),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'Track your consistency over time',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            _GeniusScoreCard(score: score, completionRate: rate),
-            const SizedBox(height: AppSpacing.xl),
-            AppCard(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: ConsistencyHeatmap(habits: active),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            const SectionHeader(title: 'Last 7 days'),
-            const SizedBox(height: AppSpacing.md),
-            AppCard(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: WeeklyTrendBars(habits: active),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            const SectionHeader(title: 'Habit metrics'),
-            const SizedBox(height: AppSpacing.md),
-            if (active.isEmpty)
-              const EmptyState(
-                icon: Icons.insights_rounded,
-                title: 'No habits yet',
-                message: 'Create a habit to unlock analytics.',
-              )
-            else
-              for (final habit in active) ...[
-                _HabitMetricTile(habit: habit),
-                const SizedBox(height: AppSpacing.sm),
-              ],
-            const SizedBox(height: AppSpacing.xl),
-            const SectionHeader(title: 'Insights'),
-            const SizedBox(height: AppSpacing.md),
-            for (final insight in insights) ...[
-              _InsightTile(insight: insight),
-              const SizedBox(height: AppSpacing.sm),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        drawer: const AppDrawer(),
+        appBar: AppBar(
+          title: const Text('Analytics'),
+          leading: const AppMenuButton(),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Overview'),
+              Tab(text: 'Insights'),
             ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            // ── Tab 1: Overview ──
+            _OverviewTab(
+              active: active,
+              score: score,
+              rate: rate,
+            ),
+            // ── Tab 2: Insights ──
+            _InsightsTab(
+              active: active,
+              insights: insights,
+            ),
           ],
         ),
       ),
     );
   }
 }
+
+/// Genius score, heatmap, and weekly trends.
+class _OverviewTab extends StatelessWidget {
+  const _OverviewTab({
+    required this.active,
+    required this.score,
+    required this.rate,
+  });
+
+  final List<Habit> active;
+  final double score;
+  final double rate;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return SafeArea(
+      bottom: false,
+      child: ListView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.all(AppSpacing.gutter),
+        children: [
+          _GeniusScoreCard(score: score, completionRate: rate),
+          const SizedBox(height: AppSpacing.xl),
+          AppCard(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: ConsistencyHeatmap(habits: active),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          const SectionHeader(title: 'Last 7 days'),
+          const SizedBox(height: AppSpacing.md),
+          AppCard(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: WeeklyTrendBars(habits: active),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          const SectionHeader(title: 'Habit metrics'),
+          const SizedBox(height: AppSpacing.md),
+          if (active.isEmpty)
+            const EmptyState(
+              icon: Icons.insights_rounded,
+              title: 'No habits yet',
+              message: 'Create a habit to unlock analytics.',
+            )
+          else
+            for (final habit in active) ...[
+              _HabitMetricTile(habit: habit),
+              const SizedBox(height: AppSpacing.sm),
+            ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Pattern insights and suggestions.
+class _InsightsTab extends StatelessWidget {
+  const _InsightsTab({
+    required this.active,
+    required this.insights,
+  });
+
+  final List<Habit> active;
+  final List<Insight> insights;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    if (insights.isEmpty) {
+      return const Center(
+        child: EmptyState(
+          icon: Icons.auto_awesome_rounded,
+          title: 'No insights yet',
+          message: 'Keep tracking to generate personalised insights.',
+        ),
+      );
+    }
+
+    return SafeArea(
+      bottom: false,
+      child: ListView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.all(AppSpacing.gutter),
+        children: [
+          for (final insight in insights) ...[
+            _InsightTile(insight: insight),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Shared widgets (unchanged from before)
+// ──────────────────────────────────────────────────────────────────────────────
 
 class _GeniusScoreCard extends StatelessWidget {
   const _GeniusScoreCard({required this.score, required this.completionRate});

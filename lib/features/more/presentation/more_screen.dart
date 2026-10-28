@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_modules.dart';
+import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/app_drawer.dart';
 import '../../../core/widgets/app_card.dart';
@@ -64,7 +65,7 @@ class MoreScreen extends StatelessWidget {
             Text('Insights', style: theme.textTheme.titleMedium),
             const SizedBox(height: AppSpacing.md),
             AppCard(
-              onTap: () => context.go('/analytics'),
+              onTap: () => context.go(AppRoutes.analytics),
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Row(
                 children: [
@@ -102,7 +103,7 @@ class MoreScreen extends StatelessWidget {
             Text('Settings', style: theme.textTheme.titleMedium),
             const SizedBox(height: AppSpacing.md),
             AppCard(
-              onTap: () => context.go('/settings'),
+              onTap: () => context.go(AppRoutes.settings),
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Row(
                 children: [

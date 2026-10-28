@@ -32,140 +32,216 @@ class ExpensesScreen extends ConsumerWidget {
     }
     final balance = income - expense;
 
-    return Scaffold(
-      drawer: const AppDrawer(),
-      appBar: AppBar(
-        title: const Text('Expenses'),
-        leading: const AppMenuButton(),
-        actions: [
-          IconButton(
-            tooltip: 'Manage categories',
-            icon: const Icon(Icons.category_outlined),
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        drawer: const AppDrawer(),
+        appBar: AppBar(
+          title: const Text('Expenses'),
+          leading: const AppMenuButton(),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Overview'),
+              Tab(text: 'Transactions'),
+              Tab(text: 'Categories'),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            // ── Tab 1: Overview ──
+            _OverviewTab(
+              theme: theme,
+              currency: currency,
+              income: income,
+              expense: expense,
+              balance: balance,
+              entries: entries,
+            ),
+            // ── Tab 2: Transactions ──
+            const _TransactionsTab(),
+            // ── Tab 3: Categories ──
+            const _CategoriesTab(),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              useSafeArea: true,
+              builder: (_) => const AddTransactionSheet(),
+            );
+          },
+          backgroundColor: AppColors.expenses,
+          icon: const Icon(Icons.add_rounded, color: Colors.white),
+          label: const Text('Add', style: TextStyle(color: Colors.white)),
+        ),
+      ),
+    );
+  }
+}
+
+/// Balance summary card + recent transactions.
+class _OverviewTab extends StatelessWidget {
+  const _OverviewTab({
+    required this.theme,
+    required this.currency,
+    required this.income,
+    required this.expense,
+    required this.balance,
+    required this.entries,
+  });
+
+  final ThemeData theme;
+  final NumberFormat currency;
+  final double income;
+  final double expense;
+  final double balance;
+  final List entries;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      bottom: false,
+      child: ListView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.gutter,
+          AppSpacing.lg,
+          AppSpacing.gutter,
+          100,
+        ),
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.expenses, AppColors.expensesAlt],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Total balance',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.9),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  currency.format(balance),
+                  style: theme.textTheme.displaySmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _Mini(
+                        label: 'Income',
+                        value: currency.format(income),
+                        icon: Icons.arrow_upward_rounded,
+                        iconColor: AppColors.success,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: _Mini(
+                        label: 'Expense',
+                        value: currency.format(expense),
+                        icon: Icons.arrow_downward_rounded,
+                        iconColor: AppColors.danger,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xxl),
+          const SectionHeader(
+            title: 'Recent',
+            subtitle: 'Latest transactions',
+          ),
+          const SizedBox(height: AppSpacing.md),
+          const TransactionList(),
+        ],
+      ),
+    );
+  }
+}
+
+/// Full scrollable list of all transactions.
+class _TransactionsTab extends StatelessWidget {
+  const _TransactionsTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      bottom: false,
+      child: ListView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.gutter,
+          AppSpacing.lg,
+          AppSpacing.gutter,
+          100,
+        ),
+        children: const [
+          TransactionList(),
+        ],
+      ),
+    );
+  }
+}
+
+/// Category management tab.
+class _CategoriesTab extends StatelessWidget {
+  const _CategoriesTab();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return SafeArea(
+      bottom: false,
+      child: ListView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.gutter,
+          AppSpacing.lg,
+          AppSpacing.gutter,
+          100,
+        ),
+        children: [
+          Text('Manage categories', style: theme.textTheme.headlineSmall),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Create and organise income & expense categories',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          FilledButton.icon(
             onPressed: () => showModalBottomSheet<void>(
               context: context,
               isScrollControlled: true,
               useSafeArea: true,
               builder: (_) => const CategoryManagerSheet(),
             ),
+            icon: const Icon(Icons.category_rounded),
+            label: const Text('Open Category Manager'),
           ),
         ],
-      ),
-      body: SafeArea(
-        bottom: false,
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.gutter,
-                AppSpacing.lg,
-                AppSpacing.gutter,
-                0,
-              ),
-              sliver: SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Expenses', style: theme.textTheme.headlineSmall),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'Track income and spending',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(AppSpacing.xl),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [AppColors.expenses, AppColors.expensesAlt],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Total balance',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: Colors.white.withValues(alpha: 0.9),
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          Text(
-                            currency.format(balance),
-                            style: theme.textTheme.displaySmall?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _Mini(
-                                  label: 'Income',
-                                  value: currency.format(income),
-                                  icon: Icons.arrow_upward_rounded,
-                                  iconColor: AppColors.success,
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.md),
-                              Expanded(
-                                child: _Mini(
-                                  label: 'Expense',
-                                  value: currency.format(expense),
-                                  icon: Icons.arrow_downward_rounded,
-                                  iconColor: AppColors.danger,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SliverPadding(
-              padding: EdgeInsets.only(
-                left: AppSpacing.gutter,
-                right: AppSpacing.gutter,
-                top: AppSpacing.xxl,
-                bottom: AppSpacing.md,
-              ),
-              sliver: SliverToBoxAdapter(
-                child: SectionHeader(
-                  title: 'Transactions',
-                  subtitle: 'Recent activity',
-                ),
-              ),
-            ),
-            const SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
-              sliver: SliverToBoxAdapter(child: TransactionList()),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            useSafeArea: true,
-            builder: (_) => const AddTransactionSheet(),
-          );
-        },
-        backgroundColor: AppColors.expenses,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text('Add', style: TextStyle(color: Colors.white)),
       ),
     );
   }

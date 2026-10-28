@@ -67,7 +67,7 @@ abstract final class AppModules {
     caption: 'Money in & out',
     icon: Icons.account_balance_wallet_rounded,
     colors: [AppColors.expenses, AppColors.expensesAlt],
-    route: '/expenses',
+    route: AppRoutes.expenses,
   );
 
     /// The five core modules.

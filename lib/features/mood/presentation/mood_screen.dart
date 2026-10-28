@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/app_drawer.dart';
-import '../../../core/widgets/section_header.dart';
 import '../application/mood_providers.dart';
 import 'widgets/mood_checkin_card.dart';
 import 'widgets/mood_history_list.dart';
@@ -18,91 +17,108 @@ class MoodScreen extends ConsumerWidget {
     final entries = ref.watch(moodEntriesProvider);
     final avg = ref.watch(moodAverageProvider);
 
-    return Scaffold(
-      drawer: const AppDrawer(),
-      appBar: AppBar(
-        title: const Text('Mood Journal'),
-        leading: Builder(
-          builder: (context) => IconButton(
-            tooltip: 'Menu',
-            icon: const Icon(Icons.menu_rounded),
-            onPressed: () => Scaffold.of(context).openDrawer(),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        drawer: const AppDrawer(),
+        appBar: AppBar(
+          title: const Text('Mood Journal'),
+          leading: const AppMenuButton(),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Check-in'),
+              Tab(text: 'History'),
+            ],
           ),
         ),
-      ),
-      body: SafeArea(
-        bottom: false,
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.gutter,
-                AppSpacing.lg,
-                AppSpacing.gutter,
-                0,
-              ),
-              sliver: SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Mood Journal', style: theme.textTheme.headlineSmall),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'Track how you feel, day by day',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _Stat(
-                            label: 'Entries',
-                            value: '${entries.length}',
-                            icon: Icons.calendar_month_rounded,
-                            color: AppColors.mood,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: _Stat(
-                            label: '7-day avg',
-                            value: avg == null ? '—' : avg.toStringAsFixed(1),
-                            icon: Icons.insights_rounded,
-                            color: AppColors.habits,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                    const MoodCheckinCard(),
-                  ],
-                ),
-              ),
+        body: TabBarView(
+          children: [
+            // ── Tab 1: Check-in ──
+            _CheckInTab(
+              entries: entries,
+              avg: avg,
+              theme: theme,
             ),
-            const SliverPadding(
-              padding: EdgeInsets.only(
-                left: AppSpacing.gutter,
-                right: AppSpacing.gutter,
-                top: AppSpacing.xxl,
-                bottom: AppSpacing.md,
-              ),
-              sliver: SliverToBoxAdapter(
-                child: SectionHeader(
-                  title: 'History',
-                  subtitle: 'Your mood over time',
-                ),
-              ),
-            ),
-            const SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
-              sliver: SliverToBoxAdapter(child: MoodHistoryList()),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 80)),
+            // ── Tab 2: History ──
+            const _HistoryTab(),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _CheckInTab extends StatelessWidget {
+  const _CheckInTab({
+    required this.entries,
+    required this.avg,
+    required this.theme,
+  });
+
+  final List entries;
+  final double? avg;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      bottom: false,
+      child: ListView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.gutter,
+          AppSpacing.lg,
+          AppSpacing.gutter,
+          AppSpacing.xxxl,
+        ),
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _Stat(
+                  label: 'Entries',
+                  value: '${entries.length}',
+                  icon: Icons.calendar_month_rounded,
+                  color: AppColors.mood,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: _Stat(
+                  label: '7-day avg',
+                  value: avg == null ? '—' : avg!.toStringAsFixed(1),
+                  icon: Icons.insights_rounded,
+                  color: AppColors.habits,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          const MoodCheckinCard(),
+        ],
+      ),
+    );
+  }
+}
+
+class _HistoryTab extends StatelessWidget {
+  const _HistoryTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      bottom: false,
+      child: ListView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.gutter,
+          AppSpacing.lg,
+          AppSpacing.gutter,
+          AppSpacing.xxxl,
+        ),
+        children: const [
+          MoodHistoryList(),
+        ],
       ),
     );
   }
