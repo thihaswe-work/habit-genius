@@ -25,13 +25,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       drawer: const AppDrawer(),
       appBar: AppBar(
         title: const Text('Settings'),
-        leading: Builder(
-          builder: (context) => IconButton(
-            tooltip: 'Menu',
-            icon: const Icon(Icons.menu_rounded),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
-        ),
+        leading: const AppMenuButton(),
       ),
       body: SafeArea(
         child: ListView(

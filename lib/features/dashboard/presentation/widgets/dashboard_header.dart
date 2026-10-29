@@ -30,12 +30,11 @@ class DashboardHeader extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
-        if (onMenuTap != null)
-          IconButton(
-            tooltip: 'Menu',
-            icon: const Icon(Icons.menu_rounded),
-            onPressed: onMenuTap,
-          ),
+        IconButton(
+          tooltip: 'Menu',
+          icon: const Icon(Icons.menu_rounded),
+          onPressed: onMenuTap ?? () => Scaffold.of(context).openDrawer(),
+        ),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

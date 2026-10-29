@@ -74,16 +74,18 @@ class DashboardScreen extends ConsumerWidget {
                 0,
               ),
               sliver: SliverToBoxAdapter(
-                child: DashboardHeader(
-                  greeting: greeting,
-                  dateLabel: dateLabel,
-                  streak: streak,
-                  onMenuTap: () => Scaffold.of(context).openDrawer(),
-                  onRemindersTap: () => showModalBottomSheet<void>(
-                    context: context,
-                    isScrollControlled: true,
-                    showDragHandle: true,
-                    builder: (_) => const RemindersSheet(),
+                child: Builder(
+                  builder: (context) => DashboardHeader(
+                    greeting: greeting,
+                    dateLabel: dateLabel,
+                    streak: streak,
+                    onMenuTap: () => Scaffold.of(context).openDrawer(),
+                    onRemindersTap: () => showModalBottomSheet<void>(
+                      context: context,
+                      isScrollControlled: true,
+                      showDragHandle: true,
+                      builder: (_) => const RemindersSheet(),
+                    ),
                   ),
                 ),
               ),
