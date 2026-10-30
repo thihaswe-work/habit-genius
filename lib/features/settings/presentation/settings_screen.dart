@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/theme_provider.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_drawer.dart';
 import '../../../data/backup/backup_service.dart';
@@ -132,6 +133,71 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             } finally {
                               if (mounted) setState(() => _busy = false);
                             }
+                          },
+                  ),
+                  const Divider(height: AppSpacing.lg),
+                  _Tile(
+                    icon: Icons.brightness_6_rounded,
+                    label: 'App Theme',
+                    subtitle: () {
+                      final mode = ref.watch(themeProvider);
+                      return mode.name;
+                    }(),
+                    onTap: _busy
+                        ? null
+                        : () {
+                            showModalBottomSheet(
+                              context: context,
+                              builder: (context) {
+                                final currentMode = ref.read(themeProvider);
+                                return Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Text(
+                                        'Choose Theme',
+                                        style: Theme.of(context).textTheme.titleMedium,
+                                      ),
+                                    ),
+                                    ListTile(
+                                      leading: const Icon(Icons.wb_sunny),
+                                      title: const Text('Light'),
+                                      trailing: currentMode == ThemeMode.light
+                                          ? const Icon(Icons.check)
+                                          : null,
+                                      onTap: () {
+                                        ref.read(themeProvider.notifier).setThemeMode(ThemeMode.light);
+                                        Navigator.pop(context);
+                                      },
+                                    ),
+                                    ListTile(
+                                      leading: const Icon(Icons.nightlight_round),
+                                      title: const Text('Dark'),
+                                      trailing: currentMode == ThemeMode.dark
+                                          ? const Icon(Icons.check)
+                                          : null,
+                                      onTap: () {
+                                        ref.read(themeProvider.notifier).setThemeMode(ThemeMode.dark);
+                                        Navigator.pop(context);
+                                      },
+                                    ),
+                                    ListTile(
+                                      leading: const Icon(Icons.brightness_auto),
+                                      title: const Text('System'),
+                                      trailing: currentMode == ThemeMode.system
+                                          ? const Icon(Icons.check)
+                                          : null,
+                                      onTap: () {
+                                        ref.read(themeProvider.notifier).setThemeMode(ThemeMode.system);
+                                        Navigator.pop(context);
+                                      },
+                                    ),
+                                    const SizedBox(height: 8),
+                                  ],
+                                );
+                              },
+                            );
                           },
                   ),
                 ],
@@ -269,6 +335,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 }
+
+  Icon _getThemeIcon(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.light:
+        return Icon(Icons.wb_sunny, color: Colors.orange);
+      case ThemeMode.dark:
+        return Icon(Icons.nightlight_round, color: Colors.blueGrey);
+      case ThemeMode.system:
+        return Icon(Icons.brightness_auto, color: Colors.teal);
+    }
+  }
 
 class _Tile extends StatelessWidget {
   const _Tile({
