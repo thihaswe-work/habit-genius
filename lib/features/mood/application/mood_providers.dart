@@ -43,7 +43,7 @@ class MoodEntriesNotifier extends Notifier<List<MoodEntry>> {
       id: existing?.id ?? newId(),
       date: now,
       mood: mood,
-      note: note,
+      note: note ?? existing?.note,
     );
     await repository.save(entry);
     state = repository.getAll();

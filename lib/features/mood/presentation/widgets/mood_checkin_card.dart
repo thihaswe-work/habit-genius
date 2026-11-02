@@ -16,6 +16,7 @@ class MoodCheckinCard extends ConsumerStatefulWidget {
 
 class _MoodCheckinCardState extends ConsumerState<MoodCheckinCard> {
   final _noteCtrl = TextEditingController();
+  String? _loadedEntryId;
 
   @override
   void dispose() {
@@ -28,6 +29,10 @@ class _MoodCheckinCardState extends ConsumerState<MoodCheckinCard> {
     final theme = Theme.of(context);
     final entry = ref.watch(todayMoodProvider);
     final selected = entry?.mood;
+    if (entry?.id != _loadedEntryId) {
+      _loadedEntryId = entry?.id;
+      _noteCtrl.text = entry?.note ?? '';
+    }
 
     return AppCard(
       gradient: LinearGradient(
@@ -93,9 +98,17 @@ class _MoodCheckinCardState extends ConsumerState<MoodCheckinCard> {
                 ),
               ),
               maxLines: 2,
-              onSubmitted: (v) {
-                ref.read(moodEntriesProvider.notifier).logMood(selected, note: v);
-              },
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton.icon(
+                onPressed: () => ref
+                    .read(moodEntriesProvider.notifier)
+                    .logMood(selected, note: _noteCtrl.text.trim()),
+                icon: const Icon(Icons.save_rounded),
+                label: const Text('Save mood and note'),
+              ),
             ),
           ],
         ],
