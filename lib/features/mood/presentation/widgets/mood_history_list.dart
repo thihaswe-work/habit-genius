@@ -54,7 +54,10 @@ class MoodHistoryList extends ConsumerWidget {
                       color: AppColors.mood.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     ),
-                    child: Text(entry.mood.emoji, style: const TextStyle(fontSize: 20)),
+                    child: Text(
+                      entry.mood.emoji,
+                      style: const TextStyle(fontSize: 20),
+                    ),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
@@ -63,8 +66,16 @@ class MoodHistoryList extends ConsumerWidget {
                       children: [
                         Row(
                           children: [
-                            Text(entry.mood.label, style: theme.textTheme.titleSmall),
-                            const Spacer(),
+                            Expanded(
+                              child: Text(
+                                entry.title?.trim().isNotEmpty == true
+                                    ? entry.title!.trim()
+                                    : entry.mood.label,
+                                style: theme.textTheme.titleSmall,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
                             Text(
                               DateFormat('MMM d, yyyy').format(entry.date),
                               style: theme.textTheme.labelSmall?.copyWith(
@@ -73,12 +84,18 @@ class MoodHistoryList extends ConsumerWidget {
                             ),
                           ],
                         ),
+                        if (entry.title?.trim().isNotEmpty == true) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            entry.mood.label,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                         if (entry.note != null && entry.note!.isNotEmpty) ...[
                           const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            entry.note!,
-                            style: theme.textTheme.bodyMedium,
-                          ),
+                          Text(entry.note!, style: theme.textTheme.bodyMedium),
                         ],
                       ],
                     ),

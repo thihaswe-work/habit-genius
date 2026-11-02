@@ -15,10 +15,23 @@ class MoodCheckinCard extends ConsumerStatefulWidget {
 }
 
 class _MoodCheckinCardState extends ConsumerState<MoodCheckinCard> {
+  final _titleCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final entry = ref.read(todayMoodProvider);
+      _titleCtrl.text = entry?.title ?? '';
+      _noteCtrl.text = entry?.note ?? '';
+    });
+  }
+
+  @override
   void dispose() {
+    _titleCtrl.dispose();
     _noteCtrl.dispose();
     super.dispose();
   }
@@ -48,7 +61,10 @@ class _MoodCheckinCardState extends ConsumerState<MoodCheckinCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('How are you feeling?', style: theme.textTheme.titleLarge),
+                    Text(
+                      'How are you feeling?',
+                      style: theme.textTheme.titleLarge,
+                    ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       selected == null
@@ -61,7 +77,10 @@ class _MoodCheckinCardState extends ConsumerState<MoodCheckinCard> {
                   ],
                 ),
               ),
-              Text(selected?.emoji ?? '😊', style: const TextStyle(fontSize: 32)),
+              Text(
+                selected?.emoji ?? '😊',
+                style: const TextStyle(fontSize: 32),
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -82,20 +101,47 @@ class _MoodCheckinCardState extends ConsumerState<MoodCheckinCard> {
           if (selected != null) ...[
             const SizedBox(height: AppSpacing.lg),
             TextField(
+              controller: _titleCtrl,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(
+                labelText: 'Title (optional)',
+                hintText: 'Give this check-in a title',
+                prefixIcon: Icon(Icons.title_rounded),
+              ),
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            TextField(
               controller: _noteCtrl,
-              decoration: InputDecoration(
-                hintText: 'Add a note (optional)',
-                filled: true,
-                fillColor: theme.colorScheme.surface.withValues(alpha: 0.7),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  borderSide: BorderSide.none,
-                ),
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(
+                labelText: 'Note (optional)',
+                hintText: 'Add a little context',
+                alignLabelWithHint: true,
+                prefixIcon: Icon(Icons.notes_rounded),
               ),
               maxLines: 2,
-              onSubmitted: (v) {
-                ref.read(moodEntriesProvider.notifier).logMood(selected, note: v);
-              },
+              textInputAction: TextInputAction.newline,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () {
+                  ref
+                      .read(moodEntriesProvider.notifier)
+                      .logMood(
+                        selected,
+                        title: _titleCtrl.text.trim(),
+                        note: _noteCtrl.text.trim(),
+                      );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Mood check-in saved')),
+                  );
+                },
+                icon: const Icon(Icons.check_rounded),
+                label: const Text('Save check-in'),
+              ),
             ),
           ],
         ],
