@@ -65,60 +65,25 @@ class BackupService {
   Future<String> exportCsv() async {
     final backup = buildBackup();
     final rows = <List<dynamic>>[
-      ['type', 'id', 'date', 'name/title', 'value', 'extra'],
+      ['type', 'id', 'date', 'name/title', 'value', 'extra']
     ];
     for (final h in backup.habits) {
-      rows.add([
-        'habit',
-        h['id'],
-        h['createdAt'],
-        h['name'],
-        h['target'],
-        jsonEncode(h),
-      ]);
+      rows.add(['habit', h['id'], h['createdAt'], h['name'], h['target'], jsonEncode(h)]);
     }
     for (final m in backup.moods) {
-      rows.add([
-        'mood',
-        m['id'],
-        m['date'],
-        m['title'] ?? m['moodIndex'],
-        '',
-        jsonEncode(m),
-      ]);
+      rows.add(['mood', m['id'], m['date'], m['moodIndex'], '', jsonEncode(m)]);
     }
     for (final e in backup.expenses) {
-      rows.add([
-        'expense',
-        e['id'],
-        e['date'],
-        e['categoryIndex'],
-        e['amount'],
-        jsonEncode(e),
-      ]);
+      rows.add(['expense', e['id'], e['date'], e['categoryIndex'], e['amount'], jsonEncode(e)]);
     }
     for (final f in backup.focusSessions) {
-      rows.add([
-        'focus',
-        f['id'],
-        f['startedAt'],
-        f['plannedMinutes'],
-        f['focusedMinutes'],
-        jsonEncode(f),
-      ]);
+      rows.add(['focus', f['id'], f['startedAt'], f['plannedMinutes'], f['focusedMinutes'], jsonEncode(f)]);
     }
     for (final d in backup.diary) {
       rows.add(['diary', d['id'], d['date'], d['title'], '', jsonEncode(d)]);
     }
     for (final c in backup.customCategories) {
-      rows.add([
-        'category',
-        c['id'],
-        '',
-        c['label'],
-        c['typeIndex'],
-        jsonEncode(c),
-      ]);
+      rows.add(['category', c['id'], '', c['label'], c['typeIndex'], jsonEncode(c)]);
     }
     final csvStr = _csv.encode(rows);
     final name =
@@ -135,105 +100,50 @@ class BackupService {
     final backup = buildBackup();
     final excel = Excel.createExcel();
     _addSheet(excel, 'Habits', [
-      [
-        'id',
-        'name',
-        'emoji',
-        'progressType',
-        'progressKind',
-        'target',
-        'unit',
-        'durationMinutesTarget',
-        'schedule',
-        'createdAt',
-        'isArchived',
-        'progressByDate',
-      ],
-      ...backup.habits.map(
-        (h) => [
-          h['id'],
-          h['name'],
-          h['emoji'],
-          h['progressType'],
-          h['progressKind'],
-          h['target'],
-          h['unit'],
-          h['durationMinutesTarget'],
-          jsonEncode(h['schedule']),
-          h['createdAt'],
-          h['isArchived'],
-          jsonEncode(h['progressByDate']),
-        ],
-      ),
+      ['id', 'name', 'emoji', 'progressType', 'progressKind', 'target', 'unit', 'durationMinutesTarget', 'schedule', 'createdAt', 'isArchived', 'progressByDate'],
+      ...backup.habits.map((h) => [
+            h['id'],
+            h['name'],
+            h['emoji'],
+            h['progressType'],
+            h['progressKind'],
+            h['target'],
+            h['unit'],
+            h['durationMinutesTarget'],
+            jsonEncode(h['schedule']),
+            h['createdAt'],
+            h['isArchived'],
+            jsonEncode(h['progressByDate']),
+          ]),
     ]);
     _addSheet(excel, 'Moods', [
-      ['id', 'date', 'moodIndex', 'note', 'title'],
-      ...backup.moods.map(
-        (m) => [m['id'], m['date'], m['moodIndex'], m['note'], m['title']],
-      ),
+      ['id', 'date', 'moodIndex', 'note'],
+      ...backup.moods.map((m) => [m['id'], m['date'], m['moodIndex'], m['note']]),
     ]);
     _addSheet(excel, 'Expenses', [
-      [
-        'id',
-        'date',
-        'amount',
-        'typeIndex',
-        'categoryIndex',
-        'note',
-        'customCategory',
-        'customEmoji',
-      ],
-      ...backup.expenses.map(
-        (e) => [
-          e['id'],
-          e['date'],
-          e['amount'],
-          e['typeIndex'],
-          e['categoryIndex'],
-          e['note'],
-          e['customCategory'],
-          e['customEmoji'],
-        ],
-      ),
+      ['id', 'date', 'amount', 'typeIndex', 'categoryIndex', 'note', 'customCategory', 'customEmoji'],
+      ...backup.expenses.map((e) => [
+            e['id'],
+            e['date'],
+            e['amount'],
+            e['typeIndex'],
+            e['categoryIndex'],
+            e['note'],
+            e['customCategory'],
+            e['customEmoji'],
+          ]),
     ]);
     _addSheet(excel, 'Focus', [
-      [
-        'id',
-        'startedAt',
-        'plannedMinutes',
-        'focusedMinutes',
-        'completed',
-        'label',
-      ],
-      ...backup.focusSessions.map(
-        (f) => [
-          f['id'],
-          f['startedAt'],
-          f['plannedMinutes'],
-          f['focusedMinutes'],
-          f['completed'],
-          f['label'],
-        ],
-      ),
+      ['id', 'startedAt', 'plannedMinutes', 'focusedMinutes', 'completed', 'label'],
+      ...backup.focusSessions.map((f) => [f['id'], f['startedAt'], f['plannedMinutes'], f['focusedMinutes'], f['completed'], f['label']]),
     ]);
     _addSheet(excel, 'Diary', [
       ['id', 'date', 'title', 'content', 'createdAt', 'updatedAt'],
-      ...backup.diary.map(
-        (d) => [
-          d['id'],
-          d['date'],
-          d['title'],
-          d['content'],
-          d['createdAt'],
-          d['updatedAt'],
-        ],
-      ),
+      ...backup.diary.map((d) => [d['id'], d['date'], d['title'], d['content'], d['createdAt'], d['updatedAt']]),
     ]);
     _addSheet(excel, 'Categories', [
       ['id', 'label', 'emoji', 'typeIndex'],
-      ...backup.customCategories.map(
-        (c) => [c['id'], c['label'], c['emoji'], c['typeIndex']],
-      ),
+      ...backup.customCategories.map((c) => [c['id'], c['label'], c['emoji'], c['typeIndex']]),
     ]);
     final bytes = excel.save()!;
     final name =
@@ -260,30 +170,18 @@ class BackupService {
       buffer.writeln('CREATE TABLE IF NOT EXISTS $name ($cols);');
     }
 
-    createTable(
-      'habit_genius_habits',
-      'id TEXT PRIMARY KEY, name TEXT, emoji TEXT, progress_type INTEGER, progress_kind INTEGER, target INTEGER, unit TEXT, duration_minutes_target INTEGER, schedule TEXT, created_at TEXT, is_archived INTEGER, progress_by_date TEXT',
-    );
-    createTable(
-      'habit_genius_moods',
-      'id TEXT PRIMARY KEY, date TEXT, mood_index INTEGER, note TEXT, title TEXT',
-    );
-    createTable(
-      'habit_genius_expenses',
-      'id TEXT PRIMARY KEY, date TEXT, amount REAL, type_index INTEGER, category_index INTEGER, note TEXT, custom_category TEXT, custom_emoji TEXT',
-    );
-    createTable(
-      'habit_genius_focus',
-      'id TEXT PRIMARY KEY, started_at TEXT, planned_minutes INTEGER, focused_minutes INTEGER, completed INTEGER, label TEXT',
-    );
-    createTable(
-      'habit_genius_diary',
-      'id TEXT PRIMARY KEY, date TEXT, title TEXT, content TEXT, created_at TEXT, updated_at TEXT',
-    );
-    createTable(
-      'habit_genius_categories',
-      'id TEXT PRIMARY KEY, label TEXT, emoji TEXT, type_index INTEGER',
-    );
+    createTable('habit_genius_habits',
+        'id TEXT PRIMARY KEY, name TEXT, emoji TEXT, progress_type INTEGER, progress_kind INTEGER, target INTEGER, unit TEXT, duration_minutes_target INTEGER, schedule TEXT, created_at TEXT, is_archived INTEGER, progress_by_date TEXT');
+    createTable('habit_genius_moods',
+        'id TEXT PRIMARY KEY, date TEXT, mood_index INTEGER, note TEXT');
+    createTable('habit_genius_expenses',
+        'id TEXT PRIMARY KEY, date TEXT, amount REAL, type_index INTEGER, category_index INTEGER, note TEXT, custom_category TEXT, custom_emoji TEXT');
+    createTable('habit_genius_focus',
+        'id TEXT PRIMARY KEY, started_at TEXT, planned_minutes INTEGER, focused_minutes INTEGER, completed INTEGER, label TEXT');
+    createTable('habit_genius_diary',
+        'id TEXT PRIMARY KEY, date TEXT, title TEXT, content TEXT, created_at TEXT, updated_at TEXT');
+    createTable('habit_genius_categories',
+        'id TEXT PRIMARY KEY, label TEXT, emoji TEXT, type_index INTEGER');
     buffer.writeln();
 
     String sqlString(String? s) {
@@ -294,33 +192,27 @@ class BackupService {
 
     for (final h in backup.habits) {
       buffer.writeln(
-        "INSERT OR REPLACE INTO habit_genius_habits VALUES (${sqlString(h['id'])}, ${sqlString(h['name'])}, ${sqlString(h['emoji'])}, ${h['progressType'] ?? 0}, ${h['progressKind']}, ${h['target'] ?? 1}, ${sqlString(h['unit'])}, ${h['durationMinutesTarget'] ?? 0}, ${sqlString(jsonEncode(h['schedule']))}, ${sqlString(h['createdAt'])}, ${(h['isArchived'] == true) ? 1 : 0}, ${sqlString(jsonEncode(h['progressByDate']))});",
-      );
+          "INSERT OR REPLACE INTO habit_genius_habits VALUES (${sqlString(h['id'])}, ${sqlString(h['name'])}, ${sqlString(h['emoji'])}, ${h['progressType'] ?? 0}, ${h['progressKind']}, ${h['target'] ?? 1}, ${sqlString(h['unit'])}, ${h['durationMinutesTarget'] ?? 0}, ${sqlString(jsonEncode(h['schedule']))}, ${sqlString(h['createdAt'])}, ${(h['isArchived'] == true) ? 1 : 0}, ${sqlString(jsonEncode(h['progressByDate']))});");
     }
     for (final m in backup.moods) {
       buffer.writeln(
-        "INSERT OR REPLACE INTO habit_genius_moods VALUES (${sqlString(m['id'])}, ${sqlString(m['date'])}, ${m['moodIndex'] ?? 0}, ${sqlString(m['note'])}, ${sqlString(m['title'])});",
-      );
+          "INSERT OR REPLACE INTO habit_genius_moods VALUES (${sqlString(m['id'])}, ${sqlString(m['date'])}, ${m['moodIndex'] ?? 0}, ${sqlString(m['note'])});");
     }
     for (final e in backup.expenses) {
       buffer.writeln(
-        "INSERT OR REPLACE INTO habit_genius_expenses VALUES (${sqlString(e['id'])}, ${sqlString(e['date'])}, ${e['amount'] ?? 0}, ${e['typeIndex'] ?? 0}, ${e['categoryIndex'] ?? 0}, ${sqlString(e['note'])}, ${sqlString(e['customCategory'])}, ${sqlString(e['customEmoji'])});",
-      );
+          "INSERT OR REPLACE INTO habit_genius_expenses VALUES (${sqlString(e['id'])}, ${sqlString(e['date'])}, ${e['amount'] ?? 0}, ${e['typeIndex'] ?? 0}, ${e['categoryIndex'] ?? 0}, ${sqlString(e['note'])}, ${sqlString(e['customCategory'])}, ${sqlString(e['customEmoji'])});");
     }
     for (final f in backup.focusSessions) {
       buffer.writeln(
-        "INSERT OR REPLACE INTO habit_genius_focus VALUES (${sqlString(f['id'])}, ${sqlString(f['startedAt'])}, ${f['plannedMinutes'] ?? 0}, ${f['focusedMinutes'] ?? 0}, ${(f['completed'] == true) ? 1 : 0}, ${sqlString(f['label'])});",
-      );
+          "INSERT OR REPLACE INTO habit_genius_focus VALUES (${sqlString(f['id'])}, ${sqlString(f['startedAt'])}, ${f['plannedMinutes'] ?? 0}, ${f['focusedMinutes'] ?? 0}, ${(f['completed'] == true) ? 1 : 0}, ${sqlString(f['label'])});");
     }
     for (final d in backup.diary) {
       buffer.writeln(
-        "INSERT OR REPLACE INTO habit_genius_diary VALUES (${sqlString(d['id'])}, ${sqlString(d['date'])}, ${sqlString(d['title'])}, ${sqlString(d['content'])}, ${sqlString(d['createdAt'])}, ${sqlString(d['updatedAt'])});",
-      );
+          "INSERT OR REPLACE INTO habit_genius_diary VALUES (${sqlString(d['id'])}, ${sqlString(d['date'])}, ${sqlString(d['title'])}, ${sqlString(d['content'])}, ${sqlString(d['createdAt'])}, ${sqlString(d['updatedAt'])});");
     }
     for (final c in backup.customCategories) {
       buffer.writeln(
-        "INSERT OR REPLACE INTO habit_genius_categories VALUES (${sqlString(c['id'])}, ${sqlString(c['label'])}, ${sqlString(c['emoji'])}, ${c['typeIndex'] ?? 1});",
-      );
+          "INSERT OR REPLACE INTO habit_genius_categories VALUES (${sqlString(c['id'])}, ${sqlString(c['label'])}, ${sqlString(c['emoji'])}, ${c['typeIndex'] ?? 1});");
     }
 
     buffer
@@ -341,11 +233,8 @@ class BackupService {
     for (var r = 0; r < rows.length; r++) {
       final row = rows[r];
       for (var c = 0; c < row.length; c++) {
-        sheet
-            .cell(CellIndex.indexByColumnRow(columnIndex: c, rowIndex: r))
-            .value = TextCellValue(
-          row[c]?.toString() ?? '',
-        );
+        sheet.cell(CellIndex.indexByColumnRow(columnIndex: c, rowIndex: r)).value =
+            TextCellValue(row[c]?.toString() ?? '');
       }
     }
   }
@@ -473,8 +362,7 @@ class BackupService {
           'schedule': cell(habitsRows, i, 8) == null
               ? const {}
               : jsonDecode(cell(habitsRows, i, 8)!),
-          'createdAt':
-              cell(habitsRows, i, 9) ?? DateTime.now().toIso8601String(),
+          'createdAt': cell(habitsRows, i, 9) ?? DateTime.now().toIso8601String(),
           'isArchived': cell(habitsRows, i, 10) == 'true',
           'progressByDate': cell(habitsRows, i, 11) == null
               ? const {}
@@ -494,7 +382,6 @@ class BackupService {
           'date': date,
           'moodIndex': int.tryParse(cell(moodsRows, i, 2) ?? '0') ?? 0,
           'note': cell(moodsRows, i, 3),
-          'title': cell(moodsRows, i, 4),
         });
       } catch (_) {}
     }
@@ -547,10 +434,8 @@ class BackupService {
           'date': date,
           'title': cell(diaryRows, i, 2),
           'content': cell(diaryRows, i, 3) ?? '',
-          'createdAt':
-              cell(diaryRows, i, 4) ?? DateTime.now().toIso8601String(),
-          'updatedAt':
-              cell(diaryRows, i, 5) ?? DateTime.now().toIso8601String(),
+          'createdAt': cell(diaryRows, i, 4) ?? DateTime.now().toIso8601String(),
+          'updatedAt': cell(diaryRows, i, 5) ?? DateTime.now().toIso8601String(),
         });
       } catch (_) {}
     }
@@ -611,10 +496,7 @@ class BackupService {
     }
 
     List<String> values(String line) {
-      final m = RegExp(
-        r"VALUES\s*\((.+)\);",
-        caseSensitive: false,
-      ).firstMatch(line);
+      final m = RegExp(r"VALUES\s*\((.+)\);", caseSensitive: false).firstMatch(line);
       if (m == null) return [];
       final inner = m.group(1)!;
       final parts = <String>[];
@@ -657,9 +539,7 @@ class BackupService {
             'schedule': schedule == null ? const {} : jsonDecode(schedule),
             'createdAt': unquote(v[9]),
             'isArchived': v[10].trim() == '1',
-            'progressByDate': progress == null
-                ? const {}
-                : jsonDecode(progress),
+            'progressByDate': progress == null ? const {} : jsonDecode(progress),
           });
         } else if (line.toLowerCase().contains('into habit_genius_moods')) {
           moods.add({
@@ -667,7 +547,6 @@ class BackupService {
             'date': unquote(v[1]),
             'moodIndex': int.tryParse(v[2].trim()) ?? 0,
             'note': unquote(v[3]),
-            'title': v.length > 4 ? unquote(v[4]) : null,
           });
         } else if (line.toLowerCase().contains('into habit_genius_expenses')) {
           expenses.add({
@@ -698,9 +577,7 @@ class BackupService {
             'createdAt': unquote(v[4]),
             'updatedAt': unquote(v[5]),
           });
-        } else if (line.toLowerCase().contains(
-          'into habit_genius_categories',
-        )) {
+        } else if (line.toLowerCase().contains('into habit_genius_categories')) {
           categories.add({
             'id': unquote(v[0]),
             'label': unquote(v[1]),
@@ -786,6 +663,4 @@ class BackupService {
   }
 }
 
-final backupServiceProvider = Provider<BackupService>(
-  (ref) => BackupService(ref),
-);
+final backupServiceProvider = Provider<BackupService>((ref) => BackupService(ref));
