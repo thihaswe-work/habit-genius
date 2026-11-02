@@ -17,6 +17,8 @@ import 'widgets/weekly_trend_bars.dart';
 class AnalyticsScreen extends ConsumerWidget {
   const AnalyticsScreen({super.key});
 
+  static final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final habits = ref.watch(habitsProvider);
@@ -28,10 +30,11 @@ class AnalyticsScreen extends ConsumerWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        key: _scaffoldKey,
         drawer: const AppDrawer(),
         appBar: AppBar(
           title: const Text('Analytics'),
-          leading: const AppMenuButton(),
+          leading: AppMenuButton(scaffoldKey: _scaffoldKey),
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Overview'),

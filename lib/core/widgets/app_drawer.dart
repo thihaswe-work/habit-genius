@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../router/app_routes.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
+import 'brand_logo.dart';
 
 /// The main application menu shown in the navigation drawer.
 ///
@@ -36,7 +37,7 @@ class AppDrawer extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('🧠', style: TextStyle(fontSize: 32)),
+                  const BrandLogo(size: 52),
                   const SizedBox(height: AppSpacing.md),
                   Text(
                     'HabitGenius',
@@ -200,16 +201,16 @@ class _DrawerItem extends StatelessWidget {
 
 /// Opens the [AppDrawer] from an AppBar leading slot.
 class AppMenuButton extends StatelessWidget {
-  const AppMenuButton({super.key});
+  const AppMenuButton({super.key, required this.scaffoldKey});
+
+  final GlobalKey<ScaffoldState> scaffoldKey;
 
   @override
   Widget build(BuildContext context) {
-    return Builder(
-      builder: (context) => IconButton(
-        tooltip: 'Menu',
-        icon: const Icon(Icons.menu_rounded),
-        onPressed: () => Scaffold.of(context).openDrawer(),
-      ),
+    return IconButton(
+      tooltip: 'Menu',
+      icon: const Icon(Icons.menu_rounded),
+      onPressed: () => scaffoldKey.currentState?.openDrawer(),
     );
   }
 }

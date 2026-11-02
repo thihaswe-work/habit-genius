@@ -11,6 +11,8 @@ import 'widgets/mood_history_list.dart';
 class MoodScreen extends ConsumerWidget {
   const MoodScreen({super.key});
 
+  static final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -20,10 +22,11 @@ class MoodScreen extends ConsumerWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        key: _scaffoldKey,
         drawer: const AppDrawer(),
         appBar: AppBar(
           title: const Text('Mood Journal'),
-          leading: const AppMenuButton(),
+          leading: AppMenuButton(scaffoldKey: _scaffoldKey),
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Check-in'),

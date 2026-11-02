@@ -11,7 +11,7 @@ class DashboardHeader extends StatelessWidget {
     required this.dateLabel,
     this.streak = 0,
     this.onRemindersTap,
-    this.onMenuTap,
+    required this.onMenuTap,
   });
 
   final String greeting;
@@ -21,7 +21,7 @@ class DashboardHeader extends StatelessWidget {
   final int streak;
 
   final VoidCallback? onRemindersTap;
-  final VoidCallback? onMenuTap;
+  final VoidCallback onMenuTap;
 
   @override
   Widget build(BuildContext context) {
@@ -30,11 +30,22 @@ class DashboardHeader extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
-        IconButton(
-          tooltip: 'Menu',
-          icon: const Icon(Icons.menu_rounded),
-          onPressed: onMenuTap ?? () => Scaffold.of(context).openDrawer(),
+        Material(
+          color: theme.colorScheme.surface,
+          shape: CircleBorder(
+            side: BorderSide(color: theme.colorScheme.outlineVariant),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onMenuTap,
+            child: const SizedBox(
+              width: 44,
+              height: 44,
+              child: Icon(Icons.menu_rounded, size: 21),
+            ),
+          ),
         ),
+        const SizedBox(width: AppSpacing.md),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,38 +128,20 @@ class _NotificationButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Stack(
-      clipBehavior: Clip.none,
-      children: <Widget>[
-        Material(
-          color: theme.colorScheme.surface,
-          shape: CircleBorder(
-            side: BorderSide(color: theme.colorScheme.outlineVariant),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onPressed,
-            child: const SizedBox(
-              width: 44,
-              height: 44,
-              child: Icon(Icons.notifications_none_rounded, size: 22),
-            ),
-          ),
+    return Material(
+      color: theme.colorScheme.surface,
+      shape: CircleBorder(
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onPressed,
+        child: const SizedBox(
+          width: 44,
+          height: 44,
+          child: Icon(Icons.notifications_none_rounded, size: 22),
         ),
-        Positioned(
-          top: 4,
-          right: 4,
-          child: Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(
-              color: AppColors.danger,
-              shape: BoxShape.circle,
-              border: Border.all(color: theme.colorScheme.surface, width: 2),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

@@ -30,13 +30,27 @@ class AppCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final radius = borderRadius ?? BorderRadius.circular(AppSpacing.radiusLg);
+    final isLight = theme.brightness == Brightness.light;
 
     final surface = DecoratedBox(
       decoration: BoxDecoration(
         color: gradient == null ? (color ?? theme.colorScheme.surface) : null,
         gradient: gradient,
         borderRadius: radius,
-        border: border,
+        border:
+            border ??
+            Border.all(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.65),
+            ),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: (isLight ? Colors.black : Colors.black54).withValues(
+              alpha: isLight ? 0.035 : 0.12,
+            ),
+            blurRadius: isLight ? 16 : 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Padding(padding: padding, child: child),
     );
@@ -47,11 +61,7 @@ class AppCard extends StatelessWidget {
       color: Colors.transparent,
       borderRadius: radius,
       clipBehavior: clipContent ? Clip.antiAlias : Clip.none,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: radius,
-        child: surface,
-      ),
+      child: InkWell(onTap: onTap, borderRadius: radius, child: surface),
     );
   }
 }

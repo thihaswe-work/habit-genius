@@ -12,15 +12,18 @@ import '../../../core/widgets/app_card.dart';
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
 
+  static final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Scaffold(
+      key: _scaffoldKey,
       drawer: const AppDrawer(),
       appBar: AppBar(
         title: const Text('More'),
-        leading: const AppMenuButton(),
+        leading: AppMenuButton(scaffoldKey: _scaffoldKey),
       ),
       body: SafeArea(
         bottom: false,

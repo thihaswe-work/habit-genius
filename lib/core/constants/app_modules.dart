@@ -26,13 +26,13 @@ class AppModule {
   final String route;
 
   LinearGradient get gradient => LinearGradient(
-        colors: colors,
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
+    colors: colors,
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 }
 
-/// The catalogue of the five core modules plus the "all tools" entry point.
+/// The catalogue of the core modules plus the "all tools" entry point.
 abstract final class AppModules {
   static const AppModule habits = AppModule(
     id: 'habits',
@@ -70,12 +70,22 @@ abstract final class AppModules {
     route: AppRoutes.expenses,
   );
 
-    /// The five core modules.
+  static const AppModule diary = AppModule(
+    id: 'diary',
+    title: 'Diary',
+    caption: 'Notes & reflections',
+    icon: Icons.auto_stories_rounded,
+    colors: [AppColors.diary, AppColors.diaryAlt],
+    route: AppRoutes.diary,
+  );
+
+  /// The core modules shown as dashboard shortcuts.
   static const List<AppModule> all = <AppModule>[
     habits,
     mood,
     focus,
     expenses,
+    diary,
   ];
 
   /// Entry that opens the "all tools" hub.

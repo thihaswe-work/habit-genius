@@ -7,6 +7,8 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_drawer.dart';
 import '../../../data/backup/backup_service.dart';
 
+enum _BackupFormat { json, csv, excel, sql }
+
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -15,320 +17,168 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _busy = false;
+
+  Future<void> _chooseBackupAction({required bool export}) async {
+    final format = await showModalBottomSheet<_BackupFormat>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.gutter,
+                AppSpacing.sm,
+                AppSpacing.gutter,
+                AppSpacing.md,
+              ),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  export ? 'Choose export format' : 'Choose backup format',
+                  style: Theme.of(sheetContext).textTheme.titleLarge,
+                ),
+              ),
+            ),
+            for (final option in _formatOptions)
+              ListTile(
+                leading: Icon(option.$2),
+                title: Text(option.$3),
+                subtitle: Text(option.$4),
+                onTap: () => Navigator.pop(sheetContext, option.$1),
+              ),
+            const SizedBox(height: AppSpacing.md),
+          ],
+        ),
+      ),
+    );
+    if (format == null || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _busy = true);
+    try {
+      final service = ref.read(backupServiceProvider);
+      final message = export
+          ? 'Saved: ${await _export(service, format)}'
+          : await _import(service, format);
+      if (mounted) messenger.showSnackBar(SnackBar(content: Text(message)));
+    } catch (error) {
+      if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('Could not ${export ? 'export' : 'import'}: $error'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<String> _export(BackupService service, _BackupFormat format) {
+    return switch (format) {
+      _BackupFormat.json => service.exportJson(),
+      _BackupFormat.csv => service.exportCsv(),
+      _BackupFormat.excel => service.exportExcel(),
+      _BackupFormat.sql => service.exportSql(),
+    };
+  }
+
+  Future<String> _import(BackupService service, _BackupFormat format) async {
+    final count = await switch (format) {
+      _BackupFormat.json => service.importJson(),
+      _BackupFormat.csv => service.importCsv(),
+      _BackupFormat.excel => service.importExcel(),
+      _BackupFormat.sql => service.importSql(),
+    };
+    return count == 0 ? 'No data imported' : 'Imported $count items';
+  }
+
+  Future<void> _chooseTheme() async {
+    final currentMode = ref.read(themeProvider);
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Text(
+                'Choose theme',
+                style: Theme.of(sheetContext).textTheme.titleLarge,
+              ),
+            ),
+            for (final mode in ThemeMode.values)
+              ListTile(
+                leading: Icon(_themeIcon(mode)),
+                title: Text(_themeLabel(mode)),
+                trailing: currentMode == mode ? const Icon(Icons.check) : null,
+                onTap: () {
+                  ref.read(themeProvider.notifier).setThemeMode(mode);
+                  Navigator.pop(sheetContext);
+                },
+              ),
+            const SizedBox(height: AppSpacing.md),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final service = ref.read(backupServiceProvider);
+    final mode = ref.watch(themeProvider);
 
     return Scaffold(
+      key: _scaffoldKey,
       drawer: const AppDrawer(),
       appBar: AppBar(
         title: const Text('Settings'),
-        leading: const AppMenuButton(),
+        leading: AppMenuButton(scaffoldKey: _scaffoldKey),
       ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.gutter),
-          children: [
+          children: <Widget>[
             Text('Backup & Restore', style: theme.textTheme.titleLarge),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              'Export your data to transfer between phones, or import a JSON/CSV/Excel/SQL backup.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              'Choose an action, then select the file format from its menu.',
+              style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: AppSpacing.xl),
-            AppCard(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Export', style: theme.textTheme.titleMedium),
-                  const SizedBox(height: AppSpacing.md),
-                  _Tile(
-                    icon: Icons.code_rounded,
-                    label: 'Export as JSON (recommended for restore)',
-                    subtitle: 'Full backup for moving to another phone',
-                    onTap: _busy
-                        ? null
-                        : () async {
-                            final messenger = ScaffoldMessenger.of(context);
-                            setState(() => _busy = true);
-                            try {
-                              final name = await service.exportJson();
-                              if (mounted) {
-                                messenger.showSnackBar(
-                                  SnackBar(content: Text('Saved: $name')),
-                                );
-                              }
-                            } finally {
-                              if (mounted) setState(() => _busy = false);
-                            }
-                          },
-                  ),
-                  const Divider(height: AppSpacing.lg),
-                  _Tile(
-                    icon: Icons.table_chart_rounded,
-                    label: 'Export as CSV',
-                    subtitle: 'For viewing in spreadsheets',
-                    onTap: _busy
-                        ? null
-                        : () async {
-                            final messenger = ScaffoldMessenger.of(context);
-                            setState(() => _busy = true);
-                            try {
-                              final name = await service.exportCsv();
-                              if (mounted) {
-                                messenger.showSnackBar(
-                                  SnackBar(content: Text('Saved: $name')),
-                                );
-                              }
-                            } finally {
-                              if (mounted) setState(() => _busy = false);
-                            }
-                          },
-                  ),
-                  const Divider(height: AppSpacing.lg),
-                  _Tile(
-                    icon: Icons.grid_on_rounded,
-                    label: 'Export as Excel (.XLSX)',
-                    subtitle: 'Multi-sheet workbook',
-                    onTap: _busy
-                        ? null
-                        : () async {
-                            final messenger = ScaffoldMessenger.of(context);
-                            setState(() => _busy = true);
-                            try {
-                              final name = await service.exportExcel();
-                              if (mounted) {
-                                messenger.showSnackBar(
-                                  SnackBar(content: Text('Saved: $name')),
-                                );
-                              }
-                            } finally {
-                              if (mounted) setState(() => _busy = false);
-                            }
-                          },
-                  ),
-                  const Divider(height: AppSpacing.lg),
-                  _Tile(
-                    icon: Icons.storage_rounded,
-                    label: 'Export as SQL (.sql)',
-                    subtitle: 'Portable SQL script for databases',
-                    onTap: _busy
-                        ? null
-                        : () async {
-                            final messenger = ScaffoldMessenger.of(context);
-                            setState(() => _busy = true);
-                            try {
-                              final name = await service.exportSql();
-                              if (mounted) {
-                                messenger.showSnackBar(
-                                  SnackBar(content: Text('Saved: $name')),
-                                );
-                              }
-                            } finally {
-                              if (mounted) setState(() => _busy = false);
-                            }
-                          },
-                  ),
-                  const Divider(height: AppSpacing.lg),
-                  _Tile(
-                    icon: Icons.brightness_6_rounded,
-                    label: 'App Theme',
-                    subtitle: () {
-                      final mode = ref.watch(themeProvider);
-                      return mode.name;
-                    }(),
-                    onTap: _busy
-                        ? null
-                        : () {
-                            showModalBottomSheet(
-                              context: context,
-                              builder: (context) {
-                                final currentMode = ref.read(themeProvider);
-                                return Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.all(16),
-                                      child: Text(
-                                        'Choose Theme',
-                                        style: Theme.of(context).textTheme.titleMedium,
-                                      ),
-                                    ),
-                                    ListTile(
-                                      leading: const Icon(Icons.wb_sunny),
-                                      title: const Text('Light'),
-                                      trailing: currentMode == ThemeMode.light
-                                          ? const Icon(Icons.check)
-                                          : null,
-                                      onTap: () {
-                                        ref.read(themeProvider.notifier).setThemeMode(ThemeMode.light);
-                                        Navigator.pop(context);
-                                      },
-                                    ),
-                                    ListTile(
-                                      leading: const Icon(Icons.nightlight_round),
-                                      title: const Text('Dark'),
-                                      trailing: currentMode == ThemeMode.dark
-                                          ? const Icon(Icons.check)
-                                          : null,
-                                      onTap: () {
-                                        ref.read(themeProvider.notifier).setThemeMode(ThemeMode.dark);
-                                        Navigator.pop(context);
-                                      },
-                                    ),
-                                    ListTile(
-                                      leading: const Icon(Icons.brightness_auto),
-                                      title: const Text('System'),
-                                      trailing: currentMode == ThemeMode.system
-                                          ? const Icon(Icons.check)
-                                          : null,
-                                      onTap: () {
-                                        ref.read(themeProvider.notifier).setThemeMode(ThemeMode.system);
-                                        Navigator.pop(context);
-                                      },
-                                    ),
-                                    const SizedBox(height: 8),
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                  ),
-                ],
-              ),
+            _SettingsActionCard(
+              icon: Icons.download_rounded,
+              title: 'Export data',
+              subtitle: 'JSON, CSV, Excel or SQL',
+              onTap: _busy ? null : () => _chooseBackupAction(export: true),
             ),
-            const SizedBox(height: AppSpacing.lg),
-            AppCard(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Restore', style: theme.textTheme.titleMedium),
-                  const SizedBox(height: AppSpacing.md),
-                  _Tile(
-                    icon: Icons.upload_file_rounded,
-                    label: 'Import from JSON backup',
-                    subtitle: 'Restore all data from another device',
-                    onTap: _busy
-                        ? null
-                        : () async {
-                            final messenger = ScaffoldMessenger.of(context);
-                            setState(() => _busy = true);
-                            try {
-                              final count = await service.importJson();
-                              if (mounted) {
-                                messenger.showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      count == 0
-                                          ? 'No data imported'
-                                          : 'Imported $count items from backup',
-                                    ),
-                                  ),
-                                );
-                              }
-                            } finally {
-                              if (mounted) setState(() => _busy = false);
-                            }
-                          },
-                  ),
-                  const Divider(height: AppSpacing.lg),
-                  _Tile(
-                    icon: Icons.table_view_rounded,
-                    label: 'Import from CSV backup',
-                    subtitle: 'Restore data exported as CSV',
-                    onTap: _busy
-                        ? null
-                        : () async {
-                            final messenger = ScaffoldMessenger.of(context);
-                            setState(() => _busy = true);
-                            try {
-                              final count = await service.importCsv();
-                              if (mounted) {
-                                messenger.showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      count == 0
-                                          ? 'No data imported'
-                                          : 'Imported $count items from backup',
-                                    ),
-                                  ),
-                                );
-                              }
-                            } finally {
-                              if (mounted) setState(() => _busy = false);
-                            }
-                          },
-                  ),
-                  const Divider(height: AppSpacing.lg),
-                  _Tile(
-                    icon: Icons.grid_on_rounded,
-                    label: 'Import from Excel (.XLSX)',
-                    subtitle: 'Restore multi-sheet workbook',
-                    onTap: _busy
-                        ? null
-                        : () async {
-                            final messenger = ScaffoldMessenger.of(context);
-                            setState(() => _busy = true);
-                            try {
-                              final count = await service.importExcel();
-                              if (mounted) {
-                                messenger.showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      count == 0
-                                          ? 'No data imported'
-                                          : 'Imported $count items from backup',
-                                    ),
-                                  ),
-                                );
-                              }
-                            } finally {
-                              if (mounted) setState(() => _busy = false);
-                            }
-                          },
-                  ),
-                  const Divider(height: AppSpacing.lg),
-                  _Tile(
-                    icon: Icons.storage_rounded,
-                    label: 'Import from SQL (.sql)',
-                    subtitle: 'Run a HabitGenius SQL backup',
-                    onTap: _busy
-                        ? null
-                        : () async {
-                            final messenger = ScaffoldMessenger.of(context);
-                            setState(() => _busy = true);
-                            try {
-                              final count = await service.importSql();
-                              if (mounted) {
-                                messenger.showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      count == 0
-                                          ? 'No data imported'
-                                          : 'Imported $count items from backup',
-                                    ),
-                                  ),
-                                );
-                              }
-                            } finally {
-                              if (mounted) setState(() => _busy = false);
-                            }
-                          },
-                  ),
-                ],
-              ),
+            const SizedBox(height: AppSpacing.md),
+            _SettingsActionCard(
+              icon: Icons.upload_file_rounded,
+              title: 'Import backup',
+              subtitle: 'Choose a Habit Genius backup file',
+              onTap: _busy ? null : () => _chooseBackupAction(export: false),
             ),
-            if (_busy) ...[
+            if (_busy) ...<Widget>[
               const SizedBox(height: AppSpacing.lg),
               const Center(child: CircularProgressIndicator()),
             ],
+            const SizedBox(height: AppSpacing.xxl),
+            Text('Appearance', style: theme.textTheme.titleLarge),
+            const SizedBox(height: AppSpacing.md),
+            _SettingsActionCard(
+              icon: _themeIcon(mode),
+              title: 'App theme',
+              subtitle: _themeLabel(mode),
+              onTap: _chooseTheme,
+            ),
           ],
         ),
       ),
@@ -336,67 +186,88 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 }
 
-  Icon _getThemeIcon(ThemeMode mode) {
-    switch (mode) {
-      case ThemeMode.light:
-        return Icon(Icons.wb_sunny, color: Colors.orange);
-      case ThemeMode.dark:
-        return Icon(Icons.nightlight_round, color: Colors.blueGrey);
-      case ThemeMode.system:
-        return Icon(Icons.brightness_auto, color: Colors.teal);
-    }
-  }
+const _formatOptions = <(_BackupFormat, IconData, String, String)>[
+  (
+    _BackupFormat.json,
+    Icons.data_object_rounded,
+    'JSON',
+    'Full backup for restore',
+  ),
+  (
+    _BackupFormat.csv,
+    Icons.table_chart_rounded,
+    'CSV',
+    'Open in spreadsheet apps',
+  ),
+  (
+    _BackupFormat.excel,
+    Icons.grid_on_rounded,
+    'Excel (.xlsx)',
+    'Multi-sheet workbook',
+  ),
+  (
+    _BackupFormat.sql,
+    Icons.storage_rounded,
+    'SQL (.sql)',
+    'Portable database script',
+  ),
+];
 
-class _Tile extends StatelessWidget {
-  const _Tile({
+String _themeLabel(ThemeMode mode) => switch (mode) {
+  ThemeMode.light => 'Light',
+  ThemeMode.dark => 'Dark',
+  ThemeMode.system => 'System',
+};
+
+IconData _themeIcon(ThemeMode mode) => switch (mode) {
+  ThemeMode.light => Icons.wb_sunny_rounded,
+  ThemeMode.dark => Icons.nightlight_round,
+  ThemeMode.system => Icons.brightness_auto_rounded,
+};
+
+class _SettingsActionCard extends StatelessWidget {
+  const _SettingsActionCard({
     required this.icon,
-    required this.label,
+    required this.title,
     required this.subtitle,
     required this.onTap,
   });
 
   final IconData icon;
-  final String label;
+  final String title;
   final String subtitle;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return InkWell(
+    return AppCard(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-              ),
-              child: Icon(icon, color: theme.colorScheme.primary),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label, style: theme.textTheme.titleSmall),
-                  Text(
-                    subtitle,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
+            child: Icon(icon, color: theme.colorScheme.primary),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(title, style: theme.textTheme.titleMedium),
+                const SizedBox(height: 2),
+                Text(subtitle, style: theme.textTheme.bodySmall),
+              ],
             ),
-            const Icon(Icons.chevron_right_rounded),
-          ],
-        ),
+          ),
+          const Icon(Icons.chevron_right_rounded),
+        ],
       ),
     );
   }

@@ -11,6 +11,7 @@ import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/analytics/presentation/analytics_screen.dart';
 import '../../features/expenses/presentation/expenses_screen.dart';
 import '../../features/diary/presentation/diary_screen.dart';
+import '../../features/splash/presentation/splash_screen.dart';
 import 'app_routes.dart';
 
 /// The application router.
@@ -19,8 +20,14 @@ import 'app_routes.dart';
 /// In-app navigation within each mini-app uses tabs.
 final appRouterProvider = Provider<GoRouter>((Ref ref) {
   return GoRouter(
-    initialLocation: AppRoutes.dashboard,
+    initialLocation: AppRoutes.splash,
     routes: <RouteBase>[
+      GoRoute(
+        path: AppRoutes.splash,
+        name: 'splash',
+        builder: (BuildContext context, GoRouterState state) =>
+            const SplashScreen(),
+      ),
       GoRoute(
         path: AppRoutes.dashboard,
         name: 'dashboard',

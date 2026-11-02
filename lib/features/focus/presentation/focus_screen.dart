@@ -9,15 +9,18 @@ import 'widgets/pomodoro_timer.dart';
 class FocusScreen extends ConsumerWidget {
   const FocusScreen({super.key});
 
+  static final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        key: _scaffoldKey,
         drawer: const AppDrawer(),
         appBar: AppBar(
           title: const Text('Focus Timer'),
-          leading: const AppMenuButton(),
+          leading: AppMenuButton(scaffoldKey: _scaffoldKey),
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Timer'),

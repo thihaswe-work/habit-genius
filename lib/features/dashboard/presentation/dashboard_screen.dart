@@ -22,6 +22,8 @@ import 'widgets/today_overview_strip.dart';
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
+  static final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final greeting = ref.watch(greetingProvider);
@@ -60,6 +62,7 @@ class DashboardScreen extends ConsumerWidget {
     ];
 
     return Scaffold(
+      key: _scaffoldKey,
       drawer: const AppDrawer(),
       body: SafeArea(
         bottom: false,
@@ -79,7 +82,7 @@ class DashboardScreen extends ConsumerWidget {
                     greeting: greeting,
                     dateLabel: dateLabel,
                     streak: streak,
-                    onMenuTap: () => Scaffold.of(context).openDrawer(),
+                    onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
                     onRemindersTap: () => showModalBottomSheet<void>(
                       context: context,
                       isScrollControlled: true,

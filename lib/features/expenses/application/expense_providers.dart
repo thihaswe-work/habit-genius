@@ -4,12 +4,57 @@ import '../../../core/utils/date_x.dart';
 import '../../../data/models/expense_entry.dart';
 import '../../../data/repositories/repository_providers.dart';
 
+enum ExpenseHistoryPeriod { month, year }
+
+class ExpenseHistorySelection {
+  const ExpenseHistorySelection({required this.period, required this.date});
+
+  final ExpenseHistoryPeriod period;
+  final DateTime date;
+
+  ExpenseHistorySelection copyWith({
+    ExpenseHistoryPeriod? period,
+    DateTime? date,
+  }) => ExpenseHistorySelection(
+    period: period ?? this.period,
+    date: date ?? this.date,
+  );
+}
+
+final expenseHistorySelectionProvider =
+    NotifierProvider<ExpenseHistorySelectionNotifier, ExpenseHistorySelection>(
+      ExpenseHistorySelectionNotifier.new,
+    );
+
+class ExpenseHistorySelectionNotifier
+    extends Notifier<ExpenseHistorySelection> {
+  @override
+  ExpenseHistorySelection build() => ExpenseHistorySelection(
+    period: ExpenseHistoryPeriod.month,
+    date: DateTime.now(),
+  );
+
+  void setPeriod(ExpenseHistoryPeriod period) {
+    state = state.copyWith(period: period);
+  }
+
+  void setDate(DateTime date) {
+    state = state.copyWith(date: date);
+  }
+
+  void move(int amount) {
+    final date = state.date;
+    state = state.copyWith(
+      date: state.period == ExpenseHistoryPeriod.month
+          ? DateTime(date.year, date.month + amount, 1)
+          : DateTime(date.year + amount, 1),
+    );
+  }
+}
+
 /// Today's income, spending and net balance.
 class ExpenseSummary {
-  const ExpenseSummary({
-    required this.income,
-    required this.expense,
-  });
+  const ExpenseSummary({required this.income, required this.expense});
 
   final double income;
   final double expense;
@@ -20,8 +65,9 @@ class ExpenseSummary {
 }
 
 /// All transactions, newest first.
-final expensesProvider =
-    NotifierProvider<ExpensesNotifier, List<ExpenseEntry>>(ExpensesNotifier.new);
+final expensesProvider = NotifierProvider<ExpensesNotifier, List<ExpenseEntry>>(
+  ExpensesNotifier.new,
+);
 
 /// Today's income / expense totals.
 final todayExpenseSummaryProvider = Provider<ExpenseSummary>((Ref ref) {

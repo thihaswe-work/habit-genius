@@ -14,32 +14,44 @@ abstract final class AppTheme {
   static ThemeData _build(Brightness brightness) {
     final isLight = brightness == Brightness.light;
 
-    final scheme = ColorScheme.fromSeed(
-      seedColor: AppColors.brand,
-      brightness: brightness,
-    ).copyWith(
-      surface: isLight ? AppColors.lightSurface : AppColors.darkSurface,
-      onSurface: isLight ? AppColors.lightOnSurface : AppColors.darkOnSurface,
-      surfaceContainerLowest:
-          isLight ? Colors.white : AppColors.darkBackground,
-      surfaceContainerLow:
-          isLight ? AppColors.lightBackground : AppColors.darkSurface,
-      surfaceContainer:
-          isLight ? AppColors.lightSurfaceMuted : AppColors.darkSurfaceMuted,
-      surfaceContainerHigh:
-          isLight ? AppColors.lightSurfaceMuted : AppColors.darkSurfaceMuted,
-      surfaceContainerHighest:
-          isLight ? AppColors.lightSurfaceMuted : AppColors.darkSurfaceMuted,
-      onSurfaceVariant:
-          isLight ? AppColors.lightOnSurfaceMuted : AppColors.darkOnSurfaceMuted,
-      outlineVariant: isLight
-          ? AppColors.lightOnSurfaceMuted.withValues(alpha: 0.18)
-          : AppColors.darkOnSurfaceMuted.withValues(alpha: 0.18),
-      primary: isLight ? AppColors.brand : const Color(0xFF8E77FF),
-      primaryContainer: isLight ? AppColors.brandSoft : const Color(0xFF2E2352),
-      onPrimaryContainer:
-          isLight ? const Color(0xFF2A1A6B) : const Color(0xFFE3DBFF),
-    );
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: AppColors.brand,
+          brightness: brightness,
+        ).copyWith(
+          surface: isLight ? AppColors.lightSurface : AppColors.darkSurface,
+          onSurface: isLight
+              ? AppColors.lightOnSurface
+              : AppColors.darkOnSurface,
+          surfaceContainerLowest: isLight
+              ? Colors.white
+              : AppColors.darkBackground,
+          surfaceContainerLow: isLight
+              ? AppColors.lightBackground
+              : AppColors.darkSurface,
+          surfaceContainer: isLight
+              ? AppColors.lightSurfaceMuted
+              : AppColors.darkSurfaceMuted,
+          surfaceContainerHigh: isLight
+              ? AppColors.lightSurfaceMuted
+              : AppColors.darkSurfaceMuted,
+          surfaceContainerHighest: isLight
+              ? AppColors.lightSurfaceMuted
+              : AppColors.darkSurfaceMuted,
+          onSurfaceVariant: isLight
+              ? AppColors.lightOnSurfaceMuted
+              : AppColors.darkOnSurfaceMuted,
+          outlineVariant: isLight
+              ? AppColors.lightOnSurfaceMuted.withValues(alpha: 0.18)
+              : AppColors.darkOnSurfaceMuted.withValues(alpha: 0.18),
+          primary: isLight ? AppColors.brand : const Color(0xFF8E77FF),
+          primaryContainer: isLight
+              ? AppColors.brandSoft
+              : const Color(0xFF2E2352),
+          onPrimaryContainer: isLight
+              ? const Color(0xFF2A1A6B)
+              : const Color(0xFFE3DBFF),
+        );
 
     final base = ThemeData(brightness: brightness, useMaterial3: true);
     final text = base.textTheme.copyWith(
@@ -72,8 +84,9 @@ abstract final class AppTheme {
 
     return base.copyWith(
       colorScheme: scheme,
-      scaffoldBackgroundColor:
-          isLight ? AppColors.lightBackground : AppColors.darkBackground,
+      scaffoldBackgroundColor: isLight
+          ? AppColors.lightBackground
+          : AppColors.darkBackground,
       textTheme: text,
       splashFactory: InkSparkle.splashFactory,
       appBarTheme: AppBarTheme(
@@ -84,6 +97,49 @@ abstract final class AppTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         titleTextStyle: text.titleLarge,
+      ),
+      tabBarTheme: TabBarThemeData(
+        dividerColor: Colors.transparent,
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicator: BoxDecoration(
+          color: scheme.primary.withValues(alpha: isLight ? 0.11 : 0.2),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+        ),
+        labelColor: scheme.primary,
+        unselectedLabelColor: scheme.onSurfaceVariant,
+        labelStyle: text.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+        unselectedLabelStyle: text.labelLarge,
+        overlayColor: WidgetStatePropertyAll(
+          scheme.primary.withValues(alpha: 0.06),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: scheme.surfaceContainer,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          borderSide: BorderSide(color: scheme.outlineVariant),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          borderSide: BorderSide(color: scheme.outlineVariant),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          borderSide: BorderSide(color: scheme.primary, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          borderSide: BorderSide(color: scheme.error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          borderSide: BorderSide(color: scheme.error, width: 1.5),
+        ),
       ),
       cardTheme: CardThemeData(
         color: scheme.surface,
@@ -148,7 +204,9 @@ abstract final class AppTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: scheme.inverseSurface,
-        contentTextStyle: text.bodyMedium?.copyWith(color: scheme.onInverseSurface),
+        contentTextStyle: text.bodyMedium?.copyWith(
+          color: scheme.onInverseSurface,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         ),

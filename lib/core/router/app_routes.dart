@@ -5,6 +5,7 @@
 abstract final class AppRoutes {
   // Main screens — every mini-app is a top-level route navigated via drawer.
   static const String dashboard = '/';
+  static const String splash = '/splash';
   static const String habits = '/habits';
   static const String mood = '/mood';
   static const String focus = '/focus';
@@ -15,9 +16,5 @@ abstract final class AppRoutes {
   static const String settings = '/settings';
 
   /// The five product modules, in the order they appear on the dashboard.
-  static const List<String> modules = <String>[
-    habits,
-    mood,
-    focus,
-  ];
+  static const List<String> modules = <String>[habits, mood, focus];
 }

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/utils/date_x.dart';
 import '../../../core/widgets/app_drawer.dart';
 import '../../../core/widgets/section_header.dart';
+import '../../../data/models/habit.dart';
 import '../application/habit_providers.dart';
 import 'widgets/add_habit_sheet.dart';
 import 'widgets/habit_card.dart';
@@ -12,24 +15,29 @@ import 'widgets/habit_card.dart';
 class HabitsScreen extends ConsumerWidget {
   const HabitsScreen({super.key});
 
+  static final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final habits = ref.watch(habitsProvider);
     final today = DateTime.now();
-    final done = habits.where((h) => h.isCompletedOn(today)).length;
-    final total = habits.length;
+    final todayHabits = ref.watch(todayHabitsProvider);
+    final done = todayHabits.where((h) => h.isCompletedOn(today)).length;
+    final total = todayHabits.length;
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
+        key: _scaffoldKey,
         drawer: const AppDrawer(),
         appBar: AppBar(
           title: const Text('Habits'),
-          leading: const AppMenuButton(),
+          leading: AppMenuButton(scaffoldKey: _scaffoldKey),
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Today'),
               Tab(text: 'All Habits'),
+              Tab(text: 'History'),
             ],
           ),
         ),
@@ -37,13 +45,15 @@ class HabitsScreen extends ConsumerWidget {
           children: [
             // ── Tab 1: Today ──
             _TodayTab(
-              habits: habits,
+              habits: todayHabits,
               today: today,
               done: done,
               total: total,
             ),
             // ── Tab 2: All Habits ──
             _AllHabitsTab(habits: habits, today: today),
+            // ── Tab 3: History ──
+            _HistoryTab(habits: habits),
           ],
         ),
         floatingActionButton: FloatingActionButton.extended(
@@ -73,7 +83,7 @@ class _TodayTab extends StatelessWidget {
     required this.total,
   });
 
-  final List habits;
+  final List<Habit> habits;
   final DateTime today;
   final int done;
   final int total;
@@ -137,10 +147,9 @@ class _TodayTab extends StatelessWidget {
                               backgroundColor: Colors.white.withValues(
                                 alpha: 0.25,
                               ),
-                              valueColor:
-                                  const AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
-                                  ),
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           ),
                         ],
@@ -190,15 +199,18 @@ class _TodayTab extends StatelessWidget {
                       padding: const EdgeInsets.all(AppSpacing.xl),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surface,
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusXl),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusXl,
+                        ),
                       ),
                       child: Column(
                         children: [
                           const Text('🎯', style: TextStyle(fontSize: 36)),
                           const SizedBox(height: AppSpacing.md),
-                          Text('No habits yet',
-                              style: theme.textTheme.titleMedium),
+                          Text(
+                            'No habits yet',
+                            style: theme.textTheme.titleMedium,
+                          ),
                           const SizedBox(height: AppSpacing.xs),
                           Text(
                             'Tap the button below to create your first habit',
@@ -216,9 +228,7 @@ class _TodayTab extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final habit = habits[index];
                       return Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: AppSpacing.md,
-                        ),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
                         child: HabitCard(habit: habit, date: today),
                       );
                     },
@@ -235,7 +245,7 @@ class _TodayTab extends StatelessWidget {
 class _AllHabitsTab extends StatelessWidget {
   const _AllHabitsTab({required this.habits, required this.today});
 
-  final List habits;
+  final List<Habit> habits;
   final DateTime today;
 
   @override
@@ -279,6 +289,194 @@ class _AllHabitsTab extends StatelessWidget {
             child: HabitCard(habit: habit, date: today),
           );
         },
+      ),
+    );
+  }
+}
+
+class _HistoryTab extends StatefulWidget {
+  const _HistoryTab({required this.habits});
+
+  final List<Habit> habits;
+
+  @override
+  State<_HistoryTab> createState() => _HistoryTabState();
+}
+
+class _HistoryTabState extends State<_HistoryTab> {
+  late DateTime _selectedDate;
+
+  DateTime get _today => DateTime.now().dayOnly;
+
+  DateTime get _firstHabitDay {
+    if (widget.habits.isEmpty) {
+      return _today.subtract(const Duration(days: 365));
+    }
+    return widget.habits
+        .map((habit) => habit.createdAt.dayOnly)
+        .reduce((a, b) => a.isBefore(b) ? a : b);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final yesterday = _today.subtract(const Duration(days: 1));
+    _selectedDate = yesterday.isBefore(_firstHabitDay) ? _today : yesterday;
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: _firstHabitDay,
+      lastDate: _today,
+      helpText: 'Choose a day to review',
+    );
+    if (picked != null) setState(() => _selectedDate = picked.dayOnly);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheduled = widget.habits
+        .where(
+          (habit) =>
+              !habit.createdAt.dayOnly.isAfter(_selectedDate) &&
+              habit.schedule.shouldDoOn(_selectedDate),
+        )
+        .toList();
+    final completed = scheduled
+        .where((habit) => habit.isCompletedOn(_selectedDate))
+        .length;
+    final isToday = _selectedDate.isSameDay(_today);
+    final previousDay = _selectedDate.subtract(const Duration(days: 1));
+    final nextDay = _selectedDate.add(const Duration(days: 1));
+
+    return SafeArea(
+      bottom: false,
+      child: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: <Widget>[
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.gutter,
+              AppSpacing.lg,
+              AppSpacing.gutter,
+              0,
+            ),
+            sliver: SliverToBoxAdapter(
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                  border: Border.all(color: theme.colorScheme.outlineVariant),
+                ),
+                child: Row(
+                  children: <Widget>[
+                    IconButton(
+                      tooltip: 'Previous day',
+                      onPressed: _selectedDate.isAfter(_firstHabitDay)
+                          ? () => setState(() => _selectedDate = previousDay)
+                          : null,
+                      icon: const Icon(Icons.chevron_left_rounded),
+                    ),
+                    Expanded(
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusMd,
+                        ),
+                        onTap: _pickDate,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.sm,
+                          ),
+                          child: Column(
+                            children: <Widget>[
+                              Text(
+                                isToday
+                                    ? 'Today'
+                                    : DateFormat('EEEE').format(_selectedDate),
+                                style: theme.textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                DateFormat('MMMM d, y').format(_selectedDate),
+                                style: theme.textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Choose date',
+                      onPressed: _pickDate,
+                      icon: const Icon(Icons.calendar_month_rounded),
+                    ),
+                    IconButton(
+                      tooltip: 'Next day',
+                      onPressed: !isToday && nextDay.isBefore(_today)
+                          ? () => setState(() => _selectedDate = nextDay)
+                          : null,
+                      icon: const Icon(Icons.chevron_right_rounded),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.gutter,
+              AppSpacing.md,
+              AppSpacing.gutter,
+              AppSpacing.lg,
+            ),
+            sliver: SliverToBoxAdapter(
+              child: Text(
+                widget.habits.isEmpty
+                    ? 'Add habits to start building your history.'
+                    : scheduled.isEmpty
+                    ? 'No habits were scheduled for this day.'
+                    : '$completed of ${scheduled.length} habits completed',
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
+          ),
+          if (scheduled.isEmpty)
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.gutter,
+              ),
+              sliver: SliverToBoxAdapter(
+                child: SectionHeader(
+                  title: 'Nothing scheduled',
+                  subtitle: isToday
+                      ? 'You can still review today’s progress here.'
+                      : 'Pick another date to review your routine.',
+                ),
+              ),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.gutter,
+              ),
+              sliver: SliverList.builder(
+                itemCount: scheduled.length,
+                itemBuilder: (context, index) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: HabitCard(
+                    habit: scheduled[index],
+                    date: _selectedDate,
+                    readOnly: true,
+                  ),
+                ),
+              ),
+            ),
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+        ],
       ),
     );
   }

@@ -9,25 +9,37 @@ import '../../../../data/models/expense_entry.dart';
 import '../../application/expense_providers.dart';
 
 class TransactionList extends ConsumerWidget {
-  const TransactionList({super.key});
+  const TransactionList({
+    super.key,
+    this.entries,
+    this.limit = 50,
+    this.emptyTitle = 'No transactions yet',
+    this.emptyMessage = 'Add your first income or expense',
+  });
+
+  final List<ExpenseEntry>? entries;
+  final int? limit;
+  final String emptyTitle;
+  final String emptyMessage;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final entries = ref.watch(expensesProvider);
+    final allEntries = ref.watch(expensesProvider);
+    final visibleEntries = entries ?? allEntries;
     final currency = NumberFormat.simpleCurrency();
 
-    if (entries.isEmpty) {
+    if (visibleEntries.isEmpty) {
       return AppCard(
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           children: [
             const Text('💸', style: TextStyle(fontSize: 32)),
             const SizedBox(height: AppSpacing.md),
-            Text('No transactions yet', style: theme.textTheme.titleMedium),
+            Text(emptyTitle, style: theme.textTheme.titleMedium),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              'Add your first income or expense',
+              emptyMessage,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -39,7 +51,7 @@ class TransactionList extends ConsumerWidget {
 
     return Column(
       children: [
-        for (final entry in entries.take(50))
+        for (final entry in visibleEntries.take(limit ?? visibleEntries.length))
           Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
             child: AppCard(
@@ -51,14 +63,17 @@ class TransactionList extends ConsumerWidget {
                     height: 42,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: (entry.type == TransactionType.expense
-                              ? AppColors.danger
-                              : AppColors.success)
-                          .withValues(alpha: 0.12),
+                      color:
+                          (entry.type == TransactionType.expense
+                                  ? AppColors.danger
+                                  : AppColors.success)
+                              .withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     ),
-                    child: Text(entry.categoryEmoji,
-                        style: const TextStyle(fontSize: 18)),
+                    child: Text(
+                      entry.categoryEmoji,
+                      style: const TextStyle(fontSize: 18),
+                    ),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(

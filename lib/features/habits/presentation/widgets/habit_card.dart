@@ -14,11 +14,13 @@ class HabitCard extends ConsumerWidget {
     required this.habit,
     required this.date,
     this.onEdit,
+    this.readOnly = false,
   });
 
   final Habit habit;
   final DateTime date;
   final VoidCallback? onEdit;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -81,7 +83,64 @@ class HabitCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
-          if (habit.kind == HabitProgressKind.duration)
+          if (readOnly)
+            if (habit.kind == HabitProgressKind.checkbox)
+              Container(
+                height: 48,
+                decoration: BoxDecoration(
+                  color: completed
+                      ? AppColors.success.withValues(alpha: 0.12)
+                      : theme.colorScheme.surfaceContainer,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Icon(
+                      completed
+                          ? Icons.check_circle_rounded
+                          : Icons.radio_button_unchecked_rounded,
+                      color: completed
+                          ? AppColors.success
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(
+                      completed ? 'Completed' : 'Not completed',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: completed
+                            ? AppColors.success
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    habit.kind == HabitProgressKind.duration
+                        ? '$progress of ${habit.effectiveTarget} min'
+                        : '$progress of ${habit.target} ${habit.unit ?? 'times'}',
+                    style: theme.textTheme.labelLarge,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                    child: LinearProgressIndicator(
+                      value: habit.ratioOn(date),
+                      minHeight: 9,
+                      backgroundColor: theme.colorScheme.surfaceContainer,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        completed ? AppColors.success : AppColors.habits,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+          else if (habit.kind == HabitProgressKind.duration)
             Row(
               children: [
                 _IconBtn(
@@ -92,11 +151,13 @@ class HabitCard extends ConsumerWidget {
                 ),
                 Expanded(
                   child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                    ),
                     child: ClipRRect(
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusPill),
+                      borderRadius: BorderRadius.circular(
+                        AppSpacing.radiusPill,
+                      ),
                       child: LinearProgressIndicator(
                         value: habit.ratioOn(date),
                         minHeight: 10,
@@ -145,13 +206,17 @@ class HabitCard extends ConsumerWidget {
                       completed
                           ? Icons.check_circle_rounded
                           : Icons.radio_button_unchecked_rounded,
-                      color: completed ? Colors.white : theme.colorScheme.onSurfaceVariant,
+                      color: completed
+                          ? Colors.white
+                          : theme.colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Text(
                       completed ? 'Done' : 'Mark as done',
                       style: theme.textTheme.labelLarge?.copyWith(
-                        color: completed ? Colors.white : theme.colorScheme.onSurface,
+                        color: completed
+                            ? Colors.white
+                            : theme.colorScheme.onSurface,
                       ),
                     ),
                   ],
@@ -169,9 +234,13 @@ class HabitCard extends ConsumerWidget {
                 ),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                    ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                      borderRadius: BorderRadius.circular(
+                        AppSpacing.radiusPill,
+                      ),
                       child: LinearProgressIndicator(
                         value: habit.ratioOn(date),
                         minHeight: 10,
@@ -227,8 +296,8 @@ class _IconBtn extends StatelessWidget {
             color: filled && enabled
                 ? Colors.white
                 : enabled
-                    ? theme.colorScheme.onSurface
-                    : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                ? theme.colorScheme.onSurface
+                : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
           ),
         ),
       ),
