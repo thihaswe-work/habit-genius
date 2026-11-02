@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_card.dart';
+import '../../../../data/models/mood_entry.dart';
 import '../../application/mood_providers.dart';
 
 class MoodHistoryList extends ConsumerWidget {
@@ -54,7 +55,10 @@ class MoodHistoryList extends ConsumerWidget {
                       color: AppColors.mood.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     ),
-                    child: Text(entry.mood.emoji, style: const TextStyle(fontSize: 20)),
+                    child: Text(
+                      entry.mood.emoji,
+                      style: const TextStyle(fontSize: 20),
+                    ),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
@@ -63,7 +67,10 @@ class MoodHistoryList extends ConsumerWidget {
                       children: [
                         Row(
                           children: [
-                            Text(entry.mood.label, style: theme.textTheme.titleSmall),
+                            Text(
+                              entry.mood.label,
+                              style: theme.textTheme.titleSmall,
+                            ),
                             const Spacer(),
                             Text(
                               DateFormat('MMM d, yyyy').format(entry.date),
@@ -71,14 +78,69 @@ class MoodHistoryList extends ConsumerWidget {
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
+                            PopupMenuButton<String>(
+                              tooltip: 'Mood actions',
+                              onSelected: (action) async {
+                                if (action == 'edit') {
+                                  final edited = await showDialog<MoodEntry>(
+                                    context: context,
+                                    builder: (_) =>
+                                        _EditMoodDialog(entry: entry),
+                                  );
+                                  if (edited != null && context.mounted) {
+                                    await ref
+                                        .read(moodEntriesProvider.notifier)
+                                        .update(edited);
+                                  }
+                                } else if (action == 'delete') {
+                                  final confirmed = await showDialog<bool>(
+                                    context: context,
+                                    builder: (dialogContext) => AlertDialog(
+                                      title: const Text('Delete mood entry?'),
+                                      content: const Text(
+                                        'This will permanently remove this mood and its note.',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(
+                                            dialogContext,
+                                            false,
+                                          ),
+                                          child: const Text('Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(
+                                            dialogContext,
+                                            true,
+                                          ),
+                                          child: const Text('Delete'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirmed == true) {
+                                    await ref
+                                        .read(moodEntriesProvider.notifier)
+                                        .delete(entry.id);
+                                  }
+                                }
+                              },
+                              itemBuilder: (_) => const [
+                                PopupMenuItem(
+                                  value: 'edit',
+                                  child: Text('Edit'),
+                                ),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Text('Delete'),
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                         if (entry.note != null && entry.note!.isNotEmpty) ...[
                           const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            entry.note!,
-                            style: theme.textTheme.bodyMedium,
-                          ),
+                          Text(entry.note!, style: theme.textTheme.bodyMedium),
                         ],
                       ],
                     ),
@@ -90,4 +152,71 @@ class MoodHistoryList extends ConsumerWidget {
       ],
     );
   }
+}
+
+class _EditMoodDialog extends StatefulWidget {
+  const _EditMoodDialog({required this.entry});
+
+  final MoodEntry entry;
+
+  @override
+  State<_EditMoodDialog> createState() => _EditMoodDialogState();
+}
+
+class _EditMoodDialogState extends State<_EditMoodDialog> {
+  late Mood _mood = widget.entry.mood;
+  late final TextEditingController _noteController = TextEditingController(
+    text: widget.entry.note ?? '',
+  );
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Edit mood'),
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Wrap(
+          spacing: AppSpacing.sm,
+          children: [
+            for (final mood in Mood.values)
+              ChoiceChip(
+                label: Text('${mood.emoji} ${mood.label}'),
+                selected: mood == _mood,
+                onSelected: (_) => setState(() => _mood = mood),
+              ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        TextField(
+          controller: _noteController,
+          autofocus: true,
+          minLines: 2,
+          maxLines: 4,
+          decoration: const InputDecoration(
+            labelText: 'Note',
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ],
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Cancel'),
+      ),
+      FilledButton(
+        onPressed: () => Navigator.pop(
+          context,
+          widget.entry.copyWith(mood: _mood, note: _noteController.text.trim()),
+        ),
+        child: const Text('Save'),
+      ),
+    ],
+  );
 }

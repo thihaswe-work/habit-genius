@@ -7,6 +7,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../data/models/expense_entry.dart';
 import '../../application/expense_providers.dart';
+import 'add_transaction_sheet.dart';
 
 class TransactionList extends ConsumerWidget {
   const TransactionList({
@@ -103,6 +104,52 @@ class TransactionList extends ConsumerWidget {
                           : AppColors.success,
                       fontWeight: FontWeight.w700,
                     ),
+                  ),
+                  PopupMenuButton<String>(
+                    tooltip: 'Transaction actions',
+                    onSelected: (action) async {
+                      if (action == 'edit') {
+                        await showModalBottomSheet<void>(
+                          context: context,
+                          isScrollControlled: true,
+                          useSafeArea: true,
+                          builder: (_) => AddTransactionSheet(entry: entry),
+                        );
+                      } else if (action == 'delete') {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (dialogContext) => AlertDialog(
+                            title: Text(
+                              'Delete ${entry.type == TransactionType.income ? 'income' : 'expense'}?',
+                            ),
+                            content: const Text(
+                              'This transaction will be permanently removed.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(dialogContext, false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(dialogContext, true),
+                                child: const Text('Delete'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed == true) {
+                          await ref
+                              .read(expensesProvider.notifier)
+                              .delete(entry.id);
+                        }
+                      }
+                    },
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(value: 'edit', child: Text('Edit')),
+                      PopupMenuItem(value: 'delete', child: Text('Delete')),
+                    ],
                   ),
                 ],
               ),

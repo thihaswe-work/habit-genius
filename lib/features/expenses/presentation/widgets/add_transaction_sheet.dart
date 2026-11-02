@@ -11,7 +11,9 @@ import '../../application/expense_providers.dart';
 import 'category_dialog.dart';
 
 class AddTransactionSheet extends ConsumerStatefulWidget {
-  const AddTransactionSheet({super.key});
+  const AddTransactionSheet({super.key, this.entry});
+
+  final ExpenseEntry? entry;
 
   @override
   ConsumerState<AddTransactionSheet> createState() =>
@@ -22,8 +24,24 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   TransactionType _type = TransactionType.expense;
   ExpenseCategory _category = ExpenseCategory.food;
   String? _customCategoryId;
+  String? _customCategoryLabel;
+  String? _customEmoji;
   final _amountCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final entry = widget.entry;
+    if (entry != null) {
+      _type = entry.type;
+      _category = entry.category;
+      _customCategoryLabel = entry.customCategory;
+      _customEmoji = entry.customEmoji;
+      _amountCtrl.text = entry.amount.toString();
+      _noteCtrl.text = entry.note ?? '';
+    }
+  }
 
   @override
   void dispose() {
@@ -71,21 +89,28 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            Text('Add transaction', style: theme.textTheme.titleLarge),
+            Text(
+              widget.entry == null ? 'Add transaction' : 'Edit transaction',
+              style: theme.textTheme.titleLarge,
+            ),
             const SizedBox(height: AppSpacing.lg),
             SegmentedButton<TransactionType>(
               segments: const [
                 ButtonSegment(
                   value: TransactionType.expense,
                   label: Text('Expense'),
-                  icon: Icon(Icons.arrow_downward_rounded,
-                      color: AppColors.danger),
+                  icon: Icon(
+                    Icons.arrow_downward_rounded,
+                    color: AppColors.danger,
+                  ),
                 ),
                 ButtonSegment(
                   value: TransactionType.income,
                   label: Text('Income'),
-                  icon: Icon(Icons.arrow_upward_rounded,
-                      color: AppColors.success),
+                  icon: Icon(
+                    Icons.arrow_upward_rounded,
+                    color: AppColors.success,
+                  ),
                 ),
               ],
               selected: {_type},
@@ -96,14 +121,17 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                       ? ExpenseCategory.food
                       : ExpenseCategory.salary;
                   _customCategoryId = null;
+                  _customCategoryLabel = null;
+                  _customEmoji = null;
                 });
               },
             ),
             const SizedBox(height: AppSpacing.lg),
             TextField(
               controller: _amountCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               decoration: const InputDecoration(
                 labelText: 'Amount',
                 prefixText: '\$ ',
@@ -121,23 +149,29 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                   _CategoryChip(
                     emoji: c.emoji,
                     label: c.label,
-                    selected:
-                        _customCategoryId == null && _category == c,
+                    selected: _customCategoryId == null && _category == c,
                     type: _type,
                     onTap: () => setState(() {
                       _category = c;
                       _customCategoryId = null;
+                      _customCategoryLabel = null;
+                      _customEmoji = null;
                     }),
                   ),
                 for (final c in custom)
                   _CategoryChip(
                     emoji: c.emoji,
                     label: c.label,
-                    selected: _customCategoryId == c.id,
+                    selected:
+                        _customCategoryId == c.id ||
+                        (_customCategoryId == null &&
+                            _customCategoryLabel == c.label),
                     type: _type,
                     onTap: () => setState(() {
                       _category = ExpenseCategory.other;
                       _customCategoryId = c.id;
+                      _customCategoryLabel = c.label;
+                      _customEmoji = c.emoji;
                     }),
                   ),
                 _NewCategoryChip(
@@ -153,6 +187,8 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                       setState(() {
                         _category = ExpenseCategory.other;
                         _customCategoryId = created.id;
+                        _customCategoryLabel = created.label;
+                        _customEmoji = created.emoji;
                       });
                     }
                   },
@@ -179,7 +215,11 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                       : AppColors.success,
                 ),
                 child: Text(
-                  _type == TransactionType.expense ? 'Add expense' : 'Add income',
+                  widget.entry != null
+                      ? 'Save changes'
+                      : (_type == TransactionType.expense
+                            ? 'Add expense'
+                            : 'Add income'),
                 ),
               ),
             ),
@@ -199,20 +239,23 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       if (index != -1) custom = all[index];
     }
     final entry = ExpenseEntry(
-      id: newId(),
-      date: DateTime.now(),
+      id: widget.entry?.id ?? newId(),
+      date: widget.entry?.date ?? DateTime.now(),
       amount: amount,
       type: _type,
       category: custom == null ? _category : ExpenseCategory.other,
       note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
-      customCategory: custom?.label,
-      customEmoji: custom?.emoji,
+      customCategory: custom?.label ?? _customCategoryLabel,
+      customEmoji: custom?.emoji ?? _customEmoji,
     );
-    ref.read(expensesProvider.notifier).add(entry);
+    if (widget.entry == null) {
+      ref.read(expensesProvider.notifier).add(entry);
+    } else {
+      ref.read(expensesProvider.notifier).update(entry);
+    }
     Navigator.of(context).pop();
   }
 }
-
 
 class _CategoryChip extends StatelessWidget {
   const _CategoryChip({
@@ -247,9 +290,7 @@ class _CategoryChip extends StatelessWidget {
               ? accent.withValues(alpha: 0.12)
               : theme.colorScheme.surfaceContainer,
           borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-          border: Border.all(
-            color: selected ? accent : Colors.transparent,
-          ),
+          border: Border.all(color: selected ? accent : Colors.transparent),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
